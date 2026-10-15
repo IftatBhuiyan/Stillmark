@@ -64,12 +64,15 @@ final class CaptureModel: NSObject, ObservableObject {
     @AppStorage("recordMicrophone") var recordMicrophone = false
     @AppStorage("recordFPS") var recordFPS = 30
     @AppStorage("showCursor") var showCursor = true
+    @AppStorage("overlayTimeout") var overlayTimeout = 12
     let captureDirectory: URL
     private var edits: [URL: [Annotation]] = [:]
     private var loadedURL: URL?
     private var recorder: ScreenRecorder?
     private var captureProcess: Process?
     private var pins: [NSPanel] = []
+    private let overlay = QuickAccessOverlay()
+    private var recentCapture: URL?
 
     var hasUnsavedAnnotations: Bool { !marks.isEmpty || edits.values.contains { !$0.isEmpty } }
 
@@ -106,6 +109,11 @@ final class CaptureModel: NSObject, ObservableObject {
 
     func capture(_ kind: CaptureKind) {
         guard !isBusy, !isRecording else { return }
+        guard CGPreflightScreenCaptureAccess() || CGRequestScreenCaptureAccess() else {
+            message = "Allow Stillmark in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch."
+            return
+        }
+        overlay.dismiss()
         isBusy = true
         let url = newURL(extension: "png")
         let process = Process()
@@ -128,14 +136,16 @@ final class CaptureModel: NSObject, ObservableObject {
                 guard let self else { return }
                 self.isBusy = false
                 self.captureProcess = nil
-                NSApp.unhide(nil)
-                NSApp.activate(ignoringOtherApps: true)
                 if FileManager.default.fileExists(atPath: url.path) {
                     self.refreshHistory()
                     self.selection = url
                     self.status = "Capture saved locally."
+                    self.showOverlay(url)
                 } else if process.terminationStatus != 0 && kind == .screen {
+                    NSApp.unhide(nil)
                     self.message = "Capture failed. Allow Stillmark in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch."
+                } else {
+                    NSApp.unhide(nil)
                 }
             }
         }
@@ -144,6 +154,15 @@ final class CaptureModel: NSObject, ObservableObject {
             captureProcess = nil; isBusy = false; NSApp.unhide(nil)
             message = error.localizedDescription
         }
+    }
+
+    private func showOverlay(_ url: URL) {
+        recentCapture = url
+        overlay.show(url: url, model: self)
+    }
+
+    func restoreOverlay() {
+        if let url = recentCapture ?? captures.first?.url { showOverlay(url) }
     }
 
     func importImage() {
@@ -177,46 +196,8 @@ final class CaptureModel: NSObject, ObservableObject {
     func redo() { if let mark = redoMarks.popLast() { marks.append(mark) } }
 
     func renderedImage() -> NSImage? {
-        guard let original = selectedImage, let cg = original.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        let size = NSSize(width: cg.width, height: cg.height)
-        let result = NSImage(size: size)
-        result.lockFocusFlipped(true)
-        original.draw(in: CGRect(origin: .zero, size: size), from: .zero, operation: .copy, fraction: 1, respectFlipped: true, hints: nil)
-        for mark in marks where mark.tool != .crop { draw(mark, in: size) }
-        result.unlockFocus()
-        if let crop = marks.last(where: { $0.tool == .crop }),
-           let rendered = result.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            let rect = CGRect(x: crop.rect.minX * size.width, y: crop.rect.minY * size.height,
-                              width: crop.rect.width * size.width, height: crop.rect.height * size.height).integral
-                .intersection(CGRect(origin: .zero, size: size))
-            if let cut = rendered.cropping(to: rect) { return NSImage(cgImage: cut, size: NSSize(width: cut.width, height: cut.height)) }
-        }
-        return result
-    }
-
-    private func draw(_ mark: Annotation, in size: NSSize) {
-        let a = NSPoint(x: mark.start.x * size.width, y: mark.start.y * size.height)
-        let b = NSPoint(x: mark.end.x * size.width, y: mark.end.y * size.height)
-        let rect = CGRect(x: mark.rect.minX * size.width, y: mark.rect.minY * size.height,
-                          width: mark.rect.width * size.width, height: mark.rect.height * size.height)
-        let width = max(3, size.width / 450)
-        mark.color.setStroke()
-        let path = NSBezierPath(); path.lineWidth = width; path.lineCapStyle = .round; path.lineJoinStyle = .round
-        switch mark.tool {
-        case .rectangle: path.appendRect(rect); path.stroke()
-        case .highlight: mark.color.withAlphaComponent(0.3).setFill(); NSBezierPath(rect: rect).fill()
-        case .redact: NSColor.black.setFill(); NSBezierPath(rect: rect).fill()
-        case .arrow:
-            path.move(to: a); path.line(to: b)
-            let angle = atan2(b.y - a.y, b.x - a.x), head = width * 5
-            path.move(to: NSPoint(x: b.x - head * cos(angle - .pi / 6), y: b.y - head * sin(angle - .pi / 6)))
-            path.line(to: b)
-            path.line(to: NSPoint(x: b.x - head * cos(angle + .pi / 6), y: b.y - head * sin(angle + .pi / 6)))
-            path.stroke()
-        case .text:
-            (mark.text as NSString).draw(at: a, withAttributes: [.font: NSFont.boldSystemFont(ofSize: max(18, size.width / 45)), .foregroundColor: mark.color])
-        default: break
-        }
+        guard let image = selectedImage else { return nil }
+        return AnnotatedImageRenderer.render(original: image, marks: marks)
     }
 
     func copyImage() {
@@ -288,10 +269,11 @@ final class CaptureModel: NSObject, ObservableObject {
                 let recorder = ScreenRecorder { [weak self] result in
                     guard let self else { return }
                     self.recorder = nil; self.isRecording = false; self.isBusy = false
-                    NSApp.unhide(nil)
                     switch result {
-                    case .success(let url): self.refreshHistory(); self.selection = url; self.status = "Recording saved."
-                    case .failure(let error): self.message = error.localizedDescription
+                    case .success(let url):
+                        self.refreshHistory(); self.selection = url; self.status = "Recording saved."
+                        self.showOverlay(url)
+                    case .failure(let error): NSApp.unhide(nil); self.message = error.localizedDescription
                     }
                 }
                 self.recorder = recorder

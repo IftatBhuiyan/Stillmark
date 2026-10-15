@@ -57,6 +57,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
+      - name: Test image export correctness
+        run: swift test --package-path mac -c release
       - name: Build and verify universal bundle
         run: bash scripts/build-mac.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

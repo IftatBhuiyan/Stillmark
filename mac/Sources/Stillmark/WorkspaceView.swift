@@ -22,6 +22,7 @@ struct WorkspaceView: View {
                 if model.captures.isEmpty {
                     ContentUnavailableView("A clean slate", systemImage: "photo.on.rectangle.angled",
                                            description: Text("Capture an area or import an image to get started."))
+                        .frame(maxHeight: .infinity)
                 } else {
                     List(selection: $model.selection) {
                         ForEach(model.captures) { item in
@@ -44,6 +45,7 @@ struct WorkspaceView: View {
                     Label("Capture Folder", systemImage: "folder")
                 }.buttonStyle(.borderless).padding(16)
             }
+            .frame(maxHeight: .infinity, alignment: .top)
             .navigationSplitViewColumnWidth(min: 220, ideal: 250, max: 320)
         } detail: {
             VStack(spacing: 0) {
@@ -249,6 +251,11 @@ struct PreferencesView: View {
                 Text("Recordings use H.264 MP4, up to 4K. Audio is off until you enable it.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Privacy & storage") {
+                Picker("Quick overlay", selection: $model.overlayTimeout) {
+                    Text("Close after 12 seconds").tag(12)
+                    Text("Close after 30 seconds").tag(30)
+                    Text("Keep until dismissed").tag(0)
+                }
                 Text("Captures stay in Pictures/Stillmark. Nothing is uploaded. Delete files in Finder when you no longer need them.")
                 Button("Open Capture Folder") { NSWorkspace.shared.open(model.captureDirectory) }
                 Button("Open Screen Recording Permissions") {

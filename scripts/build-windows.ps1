@@ -7,9 +7,9 @@ $output = [IO.Path]::GetFullPath($OutputDirectory)
 $publish = Join-Path $output 'Stillmark-Windows-x64'
 Push-Location app
 try {
-    dotnet restore src/WinShot.App/WinShot.App.csproj --runtime win-x64 --locked-mode
+    dotnet restore src/WinShot.App/WinShot.App.csproj --runtime win-x64 -p:Platform=x64 --locked-mode
     if ($LASTEXITCODE -ne 0) { throw 'Locked restore failed.' }
-    dotnet publish src/WinShot.App/WinShot.App.csproj --configuration Release --runtime win-x64 --self-contained true --no-restore --output $publish
+    dotnet publish src/WinShot.App/WinShot.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:Platform=x64 --no-restore --output $publish
     if ($LASTEXITCODE -ne 0) { throw 'Windows publish failed.' }
 } finally { Pop-Location }
 Copy-Item LICENSE (Join-Path $publish 'LICENSE.txt')

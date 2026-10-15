@@ -45,6 +45,7 @@ struct StillmarkApp: App {
                 NSApp.windows.first { $0.title == "Stillmark" }?.makeKeyAndOrderFront(nil)
             }
             Button("Show Capture Folder") { NSWorkspace.shared.open(model.captureDirectory) }
+            Button("Restore Last Capture Overlay") { model.restoreOverlay() }
             Divider()
             Button("Quit Stillmark") { NSApp.terminate(nil) }
         } label: {
