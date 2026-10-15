@@ -11,7 +11,7 @@ final class ScreenRecorder: NSObject, SCRecordingOutputDelegate, SCStreamDelegat
 
     init(completion: @escaping (Result<URL, Error>) -> Void) { self.completion = completion }
 
-    func start(displayID: CGDirectDisplayID, url: URL, fps: Int, systemAudio: Bool, microphone: Bool, showCursor: Bool) async throws {
+    func start(displayID: CGDirectDisplayID, url: URL, fps: Int, systemAudio: Bool, microphone: Bool, showCursor: Bool, maxResolution: Int) async throws {
         if microphone {
             guard await AVCaptureDevice.requestAccess(for: .audio) else {
                 throw NSError(domain: "Stillmark", code: 1, userInfo: [NSLocalizedDescriptionKey: "Microphone permission was denied. Turn off microphone recording or allow it in System Settings."])
@@ -25,7 +25,8 @@ final class ScreenRecorder: NSObject, SCRecordingOutputDelegate, SCStreamDelegat
         let filter = SCContentFilter(display: display, excludingApplications: ownApps, exceptingWindows: [])
         let config = SCStreamConfiguration()
         // Bound the encoder to 4K and retain aspect ratio, using even H.264 dimensions.
-        let scale = min(1.0, 3840.0 / Double(max(display.width, display.height)))
+        let limit = maxResolution == 1920 ? 1920.0 : 3840.0
+        let scale = min(1.0, limit / Double(max(display.width, display.height)))
         config.width = max(2, Int(Double(display.width) * scale) / 2 * 2)
         config.height = max(2, Int(Double(display.height) * scale) / 2 * 2)
         config.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(fps == 60 ? 60 : 30))

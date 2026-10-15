@@ -14,12 +14,14 @@ The project welcomes pull requests and GPL-compliant forks and spin-offs.
 |---|---|---|
 | Requirements | Windows 10/11 x64 | macOS 15+, Apple silicon or Intel |
 | Capture | Area, window, screen, scrolling | Area, window, screen |
-| Editing | Existing Windows editor | Arrows, boxes, text, highlights, solid redaction, crop |
+| Editing | Existing Windows editor | Native one-row editor; shapes, arrows, text, pencil, counters, pixelation, highlights, solid redaction, spotlight, crop, background framing |
 | Recording | Existing Windows recorder | ScreenCaptureKit, H.264 MP4, up to 4K, optional audio |
-| Other tools | Local history, pin, OCR, shortcuts | Local history, pin, Apple Vision OCR, shortcuts |
+| Other tools | Local history, pin, OCR, shortcuts | Local history, pin, Apple Vision OCR, customizable shortcuts, Quick Access overlay, local video playback |
 
 The Mac edition is an early implementation, not feature parity or an established CleanShot X replacement.
-Scrolling capture, advanced effects, and broader Mac runtime/performance validation remain open work.
+Mac scrolling capture, region recording, GIF output, and richer annotation editing remain open work.
+Broader runtime and performance validation is still needed; neither full optimization nor Windows
+live-device verification is claimed.
 Both editions are free; old commercial activation and account calls have been removed from the app host.
 The old signed update feed is disabled. Download updates manually from this repository's Releases.
 
@@ -45,8 +47,20 @@ bash scripts/build-mac.sh
 The packaging script creates an arm64/x86_64 universal app and ZIP in `dist/`.
 The app saves captures in `~/Pictures/Stillmark`. It requests screen-recording permission for capture
 and microphone permission only when microphone recording is enabled. Audio defaults to off.
-Global capture shortcuts are Command-Shift-2 (area), 3 (screen), 4 (window), and 5 (record/stop).
-Shortcuts already owned by another app may be unavailable.
+Default global capture shortcuts are Command-Shift-2 (area), 3 (screen), 4 (window), and 5 (record/stop).
+Change them in Settings; shortcuts already owned by another app may be unavailable. Capture and
+recording settings persist locally. A floating Quick Access overlay offers annotation, copy, pin,
+and drag-out actions. Recording has floating elapsed-time and Stop controls, with local AVKit playback
+after saving.
+
+The native editor supports background colors/gradients, padding, rounded corners, zoom, undo/redo,
+and flattened PNG export. Save an editable `.stillmark` project to retain its source and annotations.
+**Editable projects retain original pixels, including beneath redactions. Share an exported PNG
+when concealing sensitive information.**
+
+Current local verification includes a real screenshot and a recording that was stopped, saved, and
+opened for playback. Four export/redaction regression tests pass. Optional audio and multi-display
+behavior have not been verified live.
 
 ### Windows
 

@@ -5,44 +5,53 @@ import AppKit
 struct StillmarkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var model = CaptureModel.shared
+    @AppStorage("showMenuBarIcon") private var showMenuBarIcon = true
 
     var body: some Scene {
-        WindowGroup("Stillmark", id: "main") {
+        Window("Stillmark", id: "main") {
             WorkspaceView(model: model)
-                .frame(minWidth: 920, minHeight: 620)
+                .frame(minWidth: 1080, minHeight: 620)
                 .onAppear { delegate.model = model }
         }
         .defaultSize(width: 1180, height: 780)
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .commands {
             CommandGroup(after: .newItem) {
-                Button("Capture Area") { model.capture(.area) }.keyboardShortcut("2", modifiers: [.command, .shift])
-                Button("Capture Screen") { model.capture(.screen) }.keyboardShortcut("3", modifiers: [.command, .shift])
-                Button("Capture Window") { model.capture(.window) }.keyboardShortcut("4", modifiers: [.command, .shift])
-                Button(model.isRecording ? "Stop Recording" : "Record Screen") { model.toggleRecording() }
-                    .keyboardShortcut("5", modifiers: [.command, .shift])
+                Button(ShortcutAction.area.menuTitle) { model.capture(.area) }
+                Button(ShortcutAction.screen.menuTitle) { model.capture(.screen) }
+                Button(ShortcutAction.window.menuTitle) { model.capture(.window) }
+                Button("Capture with Timer") { model.capture(.screen, timed: true) }
+                Button(model.isRecording ? "Stop Recording" : ShortcutAction.recording.menuTitle) { model.toggleRecording() }
                 Divider()
-                Button("Import Image…") { model.importImage() }.keyboardShortcut("o")
-                Button("Export Image…") { model.exportImage() }.keyboardShortcut("s")
+                Button("Open Image or Project…") { model.importImage() }.keyboardShortcut("o")
+                Button("Done") { model.saveAndCloseEditor() }.keyboardShortcut("s")
+                    .disabled(model.selectedImage == nil)
+                Button("Export Image…") { model.exportImage() }.keyboardShortcut("s", modifiers: [.command, .shift])
+                    .disabled(model.selectedImage == nil)
+                Button("Save Editable Project…") { model.saveProject() }.keyboardShortcut("s", modifiers: [.command, .option])
+                    .disabled(model.selectedImage == nil)
+                Button("Copy Image") { model.copyImage() }.keyboardShortcut("c", modifiers: [.command, .shift])
                     .disabled(model.selectedImage == nil)
             }
             CommandGroup(replacing: .undoRedo) {
-                Button("Undo Annotation") { model.undo() }.keyboardShortcut("z").disabled(model.marks.isEmpty)
+                Button("Undo Annotation") { model.undo() }.keyboardShortcut("z").disabled(!model.canUndo)
                 Button("Redo Annotation") { model.redo() }.keyboardShortcut("z", modifiers: [.command, .shift])
-                    .disabled(model.redoMarks.isEmpty)
+                    .disabled(!model.canRedo)
             }
             CommandGroup(replacing: .help) {
                 Link("Stillmark Support & Contributions", destination: CaptureModel.repository)
             }
         }
-        MenuBarExtra {
-            Button("Capture Area   ⌘⇧2") { model.capture(.area) }
-            Button("Capture Screen   ⌘⇧3") { model.capture(.screen) }
-            Button("Capture Window   ⌘⇧4") { model.capture(.window) }
+        MenuBarExtra(isInserted: $showMenuBarIcon) {
+            Button(ShortcutAction.area.menuTitle) { model.capture(.area) }
+            Button(ShortcutAction.screen.menuTitle) { model.capture(.screen) }
+            Button(ShortcutAction.window.menuTitle) { model.capture(.window) }
+            Button("Capture with Timer") { model.capture(.screen, timed: true) }
             Divider()
-            Button(model.isRecording ? "Stop Recording" : "Record Screen   ⌘⇧5") { model.toggleRecording() }
+            Button(model.isRecording ? "Stop Recording" : ShortcutAction.recording.menuTitle) { model.toggleRecording() }
             Button("Open Stillmark") {
-                NSApp.activate(ignoringOtherApps: true)
-                NSApp.windows.first { $0.title == "Stillmark" }?.makeKeyAndOrderFront(nil)
+                model.showEditor()
             }
             Button("Show Capture Folder") { NSWorkspace.shared.open(model.captureDirectory) }
             Button("Restore Last Capture Overlay") { model.restoreOverlay() }
@@ -68,6 +77,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        if let url = urls.first { CaptureModel.shared.openFile(url) }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        CaptureModel.shared.showEditor()
+        return true
+    }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard let model else { return .terminateNow }

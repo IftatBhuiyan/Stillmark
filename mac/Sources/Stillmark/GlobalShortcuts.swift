@@ -1,6 +1,7 @@
 import Carbon
 
 /// Carbon hotkeys need no Accessibility permission or continuous keyboard event monitoring.
+@MainActor
 final class GlobalShortcuts {
     private var refs: [EventHotKeyRef] = []
     private var handler: EventHandlerRef?
@@ -26,12 +27,24 @@ final class GlobalShortcuts {
             }
             return noErr
         }, 1, &type, nil, &handler)
-        for (offset, code) in [kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5].enumerated() {
+        CaptureModel.shared.shortcutConfigurationChanged = { [weak self] in self?.reload() }
+        reload()
+    }
+
+    private func reload() {
+        refs.forEach { UnregisterEventHotKey($0) }
+        refs = []
+        var unavailable: Set<Int> = []
+        for action in ShortcutAction.allCases {
+            let binding = ShortcutPreferences.binding(for: action)
+            guard binding.modifiers != 0 else { continue }
             var ref: EventHotKeyRef?
-            let id = EventHotKeyID(signature: 0x53544D4B, id: UInt32(offset + 1))
-            if RegisterEventHotKey(UInt32(code), UInt32(cmdKey | shiftKey), id, GetApplicationEventTarget(), 0, &ref) == noErr,
+            let id = EventHotKeyID(signature: 0x53544D4B, id: UInt32(action.rawValue))
+            if RegisterEventHotKey(binding.keyCode, binding.modifiers, id, GetApplicationEventTarget(), 0, &ref) == noErr,
                let ref { refs.append(ref) }
+            else { unavailable.insert(action.rawValue) }
         }
+        CaptureModel.shared.unavailableShortcuts = unavailable
     }
 
     deinit {

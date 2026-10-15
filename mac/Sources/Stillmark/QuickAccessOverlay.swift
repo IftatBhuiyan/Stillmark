@@ -12,7 +12,9 @@ final class QuickAccessOverlay {
             ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == model.displayID
         }) ?? NSScreen.main else { return }
         let area = screen.visibleFrame
-        let panel = NSPanel(contentRect: CGRect(x: area.maxX - 312, y: area.minY + 24, width: 288, height: 224),
+        let width = CGFloat(min(360, max(240, model.overlaySize)))
+        let x = model.overlayPosition == "left" ? area.minX + 24 : area.maxX - width - 24
+        let panel = NSPanel(contentRect: CGRect(x: x, y: area.minY + 24, width: width, height: 224),
                             styleMask: [.nonactivatingPanel, .fullSizeContentView], backing: .buffered, defer: false)
         panel.level = .floating
         panel.isOpaque = false
@@ -82,9 +84,7 @@ private struct QuickAccessView: View {
 
     private func openEditor() {
         model.selection = url
-        NSApp.unhide(nil)
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.windows.first { $0.title == "Stillmark" }?.makeKeyAndOrderFront(nil)
+        model.showEditor()
         close()
     }
 }
