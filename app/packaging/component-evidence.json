@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "legalReviewApproved": false,
+  "reviewNotice": "Machine-generated source and declared-license evidence only. This is not legal advice or approval to distribute.",
+  "components": [
+    {
+      "bomRef": "pkg:nuget/Microsoft.NETCore.App.Runtime.win-x64@10.0.12",
+      "name": "Microsoft.NETCore.App.Runtime.win-x64",
+      "version": "10.0.12",
+      "sourceKind": "nuget-runtime-pack",
+      "purl": "pkg:nuget/Microsoft.NETCore.App.Runtime.win-x64@10.0.12",
+      "supplier": "Microsoft",
+      "sourceSha256": "0F63DEE7CA4383CB16848966F81E439399E2058E1671EBE27E5EAF4B200E8691",
+      "sourceHashSubject": "NuGet package archive microsoft.netcore.app.runtime.win-x64.10.0.12.nupkg",
+      "declaredLicense": {
+        "kind": "named",
+        "value": ".NET Library License",
+        "evidence": "Official .NET Windows product-distribution guidance and shipped DOTNET-LICENSE.txt"
+      },
+      "licenseUrl": "https://dotnet.microsoft.com/en-us/dotnet_library_license.htm",
+      "projectUrl": "https://github.com/dotnet/runtime"
+    },
+    {
+      "bomRef": "pkg:nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64@10.0.12",
+      "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+      "version": "10.0.12",
+      "sourceKind": "nuget-runtime-pack",
+      "purl": "pkg:nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64@10.0.12",
+      "supplier": "Microsoft",
+      "sourceSha256": "68BCE56D2402969D82AC77FBD2B2A54F55FDA86EA060366E6DDB832353DAB80A",
+      "sourceHashSubject": "NuGet package archive microsoft.windowsdesktop.app.runtime.win-x64.10.0.12.nupkg",
+      "declaredLicense": {
+        "kind": "named",
+        "value": ".NET Library License",
+        "evidence": "Official .NET Windows product-distribution guidance and shipped DOTNET-LICENSE.txt"
+      },
+      "licenseUrl": "https://dotnet.microsoft.com/en-us/dotnet_library_license.htm",
+      "projectUrl": "https://github.com/dotnet/windowsdesktop"
+    },
+    {
+      "bomRef": "pkg:nuget/Microsoft.Windows.SDK.NET.Ref@10.0.19041.57",
+      "name": "Microsoft.Windows.SDK.NET.Ref",
+      "version": "10.0.19041.57",
+      "sourceKind": "nuget-runtime-pack",
+      "purl": "pkg:nuget/Microsoft.Windows.SDK.NET.Ref@10.0.19041.57",
+      "supplier": "Microsoft",
+      "sourceSha256": "90B18F2CF7D7A23F5B0BFE2B86D8DDA45881481F677CE36ECCAF6E9AB50B6B4B",
+      "sourceHashSubject": "NuGet package archive microsoft.windows.sdk.net.ref.10.0.19041.57.nupkg",
+      "declaredLicense": {
+        "kind": "named",
+        "value": "Microsoft Windows SDK license",
+        "evidence": "NuGet package licenseUrl https://aka.ms/WinSDKLicenseURL"
+      },
+      "licenseUrl": "https://aka.ms/WinSDKLicenseURL",
+      "projectUrl": "https://aka.ms/WinSDKProjectURL"
+    },
+    {
+      "bomRef": "pkg:nuget/ScreenRecorderLib@6.3.0",
+      "name": "ScreenRecorderLib",
+      "version": "6.3.0",
+      "sourceKind": "nuget-build-injected-native",
+      "purl": "pkg:nuget/ScreenRecorderLib@6.3.0",
+      "supplier": "Sverre Kristoffer Skodje",
+      "sourceSha256": "8EE64B9834C21FA2F49235AE3EA4F0A06C1E4137517537D528F66E538647CE9C",
+      "sourceHashSubject": "NuGet package archive screenrecorderlib.6.3.0.nupkg",
+      "payloadSha256": "D9734D2B90C8785893E4E9B22B3EA303136C42E1738A706C9FE258E5B4ACF9DB",
+      "payloadAuthenticodeStatus": "NotSigned",
+      "declaredLicense": {
+        "kind": "spdx",
+        "value": "MIT",
+        "evidence": "NuGet package metadata and packaged LICENSE"
+      },
+      "licenseUrl": "https://licenses.nuget.org/MIT",
+      "projectUrl": "https://github.com/sskodje/ScreenRecorderLib"
+    },
+    {
+      "bomRef": "pkg:nuget/Microsoft.NETCore.App.Host.win-x64@10.0.12",
+      "name": "Microsoft.NETCore.App.Host.win-x64",
+      "version": "10.0.12",
+      "sourceKind": "dotnet-apphost-template",
+      "purl": "pkg:nuget/Microsoft.NETCore.App.Host.win-x64@10.0.12",
+      "supplier": "Microsoft",
+      "sourceSha256": "0649F1BEBACEF4F17B6694201ABC6DDE152C333468D2314B4F7104D34D70C7AA",
+      "sourceHashSubject": ".NET host-pack apphost.exe template before SDK patching",
+      "declaredLicense": {
+        "kind": "named",
+        "value": ".NET Library License",
+        "evidence": "Official .NET Windows product-distribution guidance and shipped DOTNET-LICENSE.txt; output is patched by the SDK"
+      },
+      "licenseUrl": "https://dotnet.microsoft.com/en-us/dotnet_library_license.htm",
+      "projectUrl": "https://github.com/dotnet/runtime"
+    },
+    {
+      "bomRef": "pkg:nuget/Velopack@1.2.0",
+      "name": "Velopack",
+      "version": "1.2.0",
+      "sourceKind": "nuget-package",
+      "purl": "pkg:nuget/Velopack@1.2.0",
+      "supplier": "Velopack Ltd",
+      "sourceSha256": "B97A28814938B58E4A34C47EF6E84BAA3E436B0FC9B1F417089F28C8BE522193",
+      "sourceHashSubject": "NuGet package archive Velopack.1.2.0.nupkg",
+      "declaredLicense": {
+        "kind": "spdx",
+        "value": "MIT",
+        "evidence": "NuGet package nuspec declares MIT and links to the package project repository"
+      },
+      "licenseUrl": "https://licenses.nuget.org/MIT",
+      "projectUrl": "https://github.com/velopack/velopack"
+    }
+  ]
+}

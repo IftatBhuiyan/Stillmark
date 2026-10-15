@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "contractRevision": 1,
+  "applicationMajor": 1,
+  "licenseMode": "offline-signed",
+  "provider": null,
+  "storefront": {
+    "checkoutApproved": true,
+    "buyerTermsApproved": true,
+    "primaryVariantId": null,
+    "checkoutUrl": "https://getstillmark.com/pricing",
+    "accountUrl": "https://getstillmark.com/manage-license"
+  }
+}

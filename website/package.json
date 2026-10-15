@@ -1,0 +1,10 @@
+{
+  "name": "stillmark-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node tools/validate-site.mjs",
+    "dev": "node tools/serve.mjs",
+    "build": "node tools/build-static.mjs"
+  }
+}

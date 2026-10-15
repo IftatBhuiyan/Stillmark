@@ -1,0 +1,194 @@
+<UserControl x:Class="WinShot.App.HistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+    <UserControl.Resources>
+        <Style x:Key="HistoryActionButton"
+               TargetType="Button"
+               BasedOn="{StaticResource GhostIconButton}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+        </Style>
+        <Style x:Key="HistoryItemContainer" TargetType="ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel Margin="18">
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Capture History" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock x:Name="CountText" Style="{StaticResource HintText}" Margin="1,3,12,0"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+            <Button x:Name="ClearAllButton" Grid.Column="1" Content="Clear all" Style="{StaticResource TextCommand}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    FocusVisualStyle="{StaticResource KeyboardFocusVisual}"
+                    Click="OnClearAll" />
+        </Grid>
+
+        <Grid>
+            <TextBlock x:Name="EmptyText"
+                       Text="Your captures will appear here."
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       FontSize="13"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Visibility="Collapsed" />
+            <ListBox x:Name="Cards"
+                     Background="Transparent"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     BorderThickness="0"
+                     Focusable="False"
+                     IsTabStop="False"
+                     ItemContainerStyle="{StaticResource HistoryItemContainer}"
+                     KeyboardNavigation.TabNavigation="Continue"
+                     ScrollViewer.CanContentScroll="True"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.IsDeferredScrollingEnabled="True"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     VirtualizingPanel.CacheLength="1,1"
+                     VirtualizingPanel.CacheLengthUnit="Page"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.ScrollUnit="Pixel"
+                     VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border x:Name="CardRoot"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="0,0,0,1"
+                                CornerRadius="0"
+                                Margin="0,0,8,8"
+                                Padding="0,10,0,18"
+                                AutomationProperties.Name="{Binding AutomationName}"
+                                DataContextChanged="OnCardDataContextChanged"
+                                Loaded="OnCardLoaded"
+                                Unloaded="OnCardUnloaded">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="196" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Width="196"
+                                        Height="122"
+                                        Background="{DynamicResource InputBrush}"
+                                        CornerRadius="7"
+                                        Cursor="Hand"
+                                        Focusable="True"
+                                        IsEnabled="{Binding CanOpen}"
+                                        FocusVisualStyle="{StaticResource KeyboardFocusVisual}"
+                                        ToolTip="{Binding OpenToolTip}"
+                                        AutomationProperties.Name="{Binding OpenAutomationName}"
+                                        KeyDown="OnThumbnailKeyDown"
+                                        MouseLeftButtonDown="OnThumbnailMouseLeftButtonDown">
+                                    <Grid ClipToBounds="True">
+                                        <TextBlock Text="{Binding PlaceholderText}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   FontSize="11"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Margin="14" />
+                                        <Image Source="{Binding Thumbnail}"
+                                               Stretch="Uniform"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </Grid>
+                                </Border>
+
+                                <Grid Grid.Column="1" Margin="14,3,4,3">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding TimestampText}"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding DimensionText}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               FontSize="11"
+                                               Margin="0,4,0,0" />
+                                    <TextBlock Grid.Row="2"
+                                               Text="{Binding FileStatusText}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               FontSize="11"
+                                               Margin="0,8,0,0"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               TextWrapping="Wrap" />
+                                    <StackPanel Grid.Row="3"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Right">
+                                        <Button Style="{StaticResource HistoryActionButton}"
+                                                ToolTip="Edit a copy"
+                                                AutomationProperties.Name="Edit a copy"
+                                                IsEnabled="{Binding CanCopy}"
+                                                Click="OnEditImage">
+                                            <TextBlock Text="&#xE70F;"
+                                                       FontFamily="{StaticResource IconFont}"
+                                                       FontSize="12" />
+                                        </Button>
+                                        <Button Style="{StaticResource HistoryActionButton}"
+                                                ToolTip="Copy image"
+                                                AutomationProperties.Name="Copy image"
+                                                IsEnabled="{Binding CanCopy}"
+                                                Click="OnCopyImage">
+                                            <TextBlock Text="&#xE8C8;"
+                                                       FontFamily="{StaticResource IconFont}"
+                                                       FontSize="12" />
+                                        </Button>
+                                        <Button Style="{StaticResource HistoryActionButton}"
+                                                ToolTip="Show in folder"
+                                                AutomationProperties.Name="Show in folder"
+                                                IsEnabled="{Binding CanOpen}"
+                                                Click="OnRevealFile">
+                                            <TextBlock Text="&#xE838;"
+                                                       FontFamily="{StaticResource IconFont}"
+                                                       FontSize="12" />
+                                        </Button>
+                                        <Button Style="{StaticResource HistoryActionButton}"
+                                                ToolTip="Remove from history"
+                                                AutomationProperties.Name="Remove from history"
+                                                IsEnabled="{Binding CanRemove}"
+                                                Click="OnRemoveEntry">
+                                            <TextBlock Text="&#xE74D;"
+                                                       FontFamily="{StaticResource IconFont}"
+                                                       FontSize="12" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </DockPanel>
+</UserControl>

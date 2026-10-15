@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64</Platforms>
+    <AssemblyName>WinShot.RegionEffects.Perf</AssemblyName>
+    <RootNamespace>WinShot.RegionEffects.Perf</RootNamespace>
+    <!-- This isolated tool has no PackageReference items and must not create a package lock file. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\src\WinShot.App\Editor\PixelFilters.cs"
+             Link="MeasuredSource\PixelFilters.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\Editor\RegionEffectProcessing.cs"
+             Link="MeasuredSource\RegionEffectProcessing.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\PixelFilters.cs"
+                      LogicalName="WinShot.MeasuredPixelFilters.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\RegionEffectProcessing.cs"
+                      LogicalName="WinShot.MeasuredRegionEffectProcessing.cs" />
+  </ItemGroup>
+
+</Project>

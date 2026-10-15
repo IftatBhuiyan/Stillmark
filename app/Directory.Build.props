@@ -1,0 +1,29 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <WinShotLocalDeveloperUse Condition="'$(WinShotLocalDeveloperUse)' == '' and '$(Configuration)' == 'Debug'">true</WinShotLocalDeveloperUse>
+    <WinShotLocalDeveloperUse Condition="'$(WinShotLocalDeveloperUse)' == ''">false</WinShotLocalDeveloperUse>
+  </PropertyGroup>
+
+  <!-- Keep the monotonic release version in sync with AppInfo.Version and the release tag.
+       New licenses cover publication dates; major-version limits apply to legacy licenses. -->
+  <PropertyGroup>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <InformationalVersion>1.1.0</InformationalVersion>
+    <Product>Stillmark</Product>
+    <Company>Iftat Bhuiyan</Company>
+    <Authors>Iftat Bhuiyan</Authors>
+    <Copyright>Copyright © 2026 Iftat Bhuiyan</Copyright>
+  </PropertyGroup>
+
+  <!-- Supply-chain: hash-locked, reproducible restores. CI should restore in locked mode. -->
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+</Project>

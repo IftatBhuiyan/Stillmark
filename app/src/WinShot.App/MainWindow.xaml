@@ -1,0 +1,125 @@
+<Window x:Class="WinShot.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Stillmark"
+        Width="760"
+        Height="620"
+        MinWidth="640"
+        MinHeight="520"
+        ResizeMode="CanResize"
+        Background="{DynamicResource CanvasBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        WindowStartupLocation="CenterScreen">
+    <Grid Background="{DynamicResource CanvasBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="0,0,4,0">
+        <StackPanel Margin="30,24,26,28">
+            <!-- Header -->
+            <DockPanel Margin="2,0,2,24">
+                <Image Width="40" Height="40" DockPanel.Dock="Left" VerticalAlignment="Center"
+                       Source="/Assets/winshot-master.png"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
+
+                <StackPanel x:Name="HeaderButtons" Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center" />
+
+                <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Stillmark" FontSize="21" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                        <Ellipse Width="6" Height="6" Fill="{DynamicResource SuccessBrush}"
+                                 Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Style="{StaticResource HintText}"
+                                   Text="Ready &#x00B7; Running in the tray" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Primary All-In-One -->
+            <Button x:Name="AllInOneButton"
+                    Style="{StaticResource DashboardPrimaryCard}"
+                    Cursor="Hand"
+                    ToolTip="Open all capture modes"
+                    AutomationProperties.Name="New capture"
+                    AutomationProperties.HelpText="Open all capture modes for area, window, screen, timer, text, or recording.">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="44" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="28" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="Transparent">
+                        <TextBlock Text="&#xE7C5;" FontFamily="{StaticResource IconFont}" FontSize="19"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0,18,0" VerticalAlignment="Center">
+                        <TextBlock Text="New capture" FontSize="17" FontWeight="SemiBold" />
+                        <TextBlock Text="Area, window, screen, timer, text, or recording"
+                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,3,0,0" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" x:Name="AioHotkey"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontSize="11.5" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="&#xE76C;" FontFamily="{StaticResource IconFont}"
+                               FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </Button>
+
+            <DockPanel Margin="2,25,2,8" LastChildFill="False">
+                <TextBlock Text="Capture" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" DockPanel.Dock="Left" />
+                <Button x:Name="OpenModesButton" DockPanel.Dock="Right"
+                        Style="{StaticResource DashboardLinkButton}"
+                        Content="Open all capture modes"
+                        AutomationProperties.Name="Open all capture modes" />
+            </DockPanel>
+            <Grid>
+                <UniformGrid x:Name="ActionsGrid" Columns="2" />
+                <Border x:Name="ActionsDivider" Width="1"
+                        Background="Transparent"
+                        HorizontalAlignment="Center" />
+            </Grid>
+
+            <DockPanel Margin="2,24,2,8">
+                <TextBlock x:Name="RecentHeading"
+                           Text="Recent captures" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" DockPanel.Dock="Left" />
+                <Button x:Name="ViewAllButton" DockPanel.Dock="Right" HorizontalAlignment="Right"
+                        Style="{StaticResource DashboardLinkButton}"
+                        Content="View history" />
+            </DockPanel>
+            <GroupBox Style="{StaticResource DashboardRecentGroup}"
+                      AutomationProperties.AutomationId="RecentCaptureStrip"
+                      AutomationProperties.LabeledBy="{Binding ElementName=RecentHeading}">
+                <Grid>
+                    <StackPanel x:Name="RecentEmpty" Margin="4,16" HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="17"
+                                   Foreground="{DynamicResource TextTertiaryBrush}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="No captures yet" FontSize="12.5" FontWeight="SemiBold"
+                                   Margin="0,7,0,0" HorizontalAlignment="Center" />
+                        <TextBlock Text="Use New capture or a shortcut to get started."
+                                   Style="{StaticResource HintText}" Margin="0,3,0,0"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                    <ScrollViewer x:Name="RecentScrollViewer"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  Focusable="False">
+                        <StackPanel x:Name="RecentStrip"
+                                    Orientation="Horizontal"
+                                    KeyboardNavigation.TabNavigation="Local"
+                                    KeyboardNavigation.DirectionalNavigation="Contained" />
+                    </ScrollViewer>
+                </Grid>
+            </GroupBox>
+        </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

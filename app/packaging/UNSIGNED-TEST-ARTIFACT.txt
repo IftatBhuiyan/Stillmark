@@ -1,0 +1,10 @@
+WINSHOT UNSIGNED TEST ARTIFACT
+
+This package is for local engineering and clean-machine validation only.
+It is not signed or supported.
+It is not approved for sale or public distribution.
+
+Do not bypass Windows security warnings to install or distribute this artifact.
+Production release requires a cleared product identity, an approved legal publisher,
+signed and timestamped binaries and installer, a verified update/rollback path, and
+the complete release evidence required by the repository release gate.

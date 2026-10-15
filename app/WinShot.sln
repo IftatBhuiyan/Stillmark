@@ -1,0 +1,63 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinShot.App", "src\WinShot.App\WinShot.App.csproj", "{1A2B3C4D-0001-4A00-9000-000000000001}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinShot.Core", "src\WinShot.Core\WinShot.Core.csproj", "{1A2B3C4D-0002-4A00-9000-000000000002}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinShot.Capture", "src\WinShot.Capture\WinShot.Capture.csproj", "{1A2B3C4D-0003-4A00-9000-000000000003}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinShot.Interop", "src\WinShot.Interop\WinShot.Interop.csproj", "{1A2B3C4D-0004-4A00-9000-000000000004}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinShot.Core.Tests", "tests\WinShot.Core.Tests\WinShot.Core.Tests.csproj", "{1A2B3C4D-0005-4A00-9000-000000000005}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D0AFA7E9-691C-4BA6-9C6F-608E92770E56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinShot.Licensing", "src\WinShot.Licensing\WinShot.Licensing.csproj", "{8BE96850-997C-4E15-AD82-64AE8FC2C775}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{3B3BF70A-75BB-4232-A51B-629422452380}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinShot.KeyGen", "tools\WinShot.KeyGen\WinShot.KeyGen.csproj", "{07C0D9E5-A016-4DDD-BC27-7C5D964DD036}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A2B3C4D-0001-4A00-9000-000000000001}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{1A2B3C4D-0001-4A00-9000-000000000001}.Debug|Any CPU.Build.0 = Debug|x64
+		{1A2B3C4D-0001-4A00-9000-000000000001}.Release|Any CPU.ActiveCfg = Release|x64
+		{1A2B3C4D-0001-4A00-9000-000000000001}.Release|Any CPU.Build.0 = Release|x64
+		{1A2B3C4D-0002-4A00-9000-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-0002-4A00-9000-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2B3C4D-0002-4A00-9000-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-0002-4A00-9000-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2B3C4D-0003-4A00-9000-000000000003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-0003-4A00-9000-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2B3C4D-0003-4A00-9000-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-0003-4A00-9000-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2B3C4D-0004-4A00-9000-000000000004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-0004-4A00-9000-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2B3C4D-0004-4A00-9000-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-0004-4A00-9000-000000000004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2B3C4D-0005-4A00-9000-000000000005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-0005-4A00-9000-000000000005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2B3C4D-0005-4A00-9000-000000000005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-0005-4A00-9000-000000000005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BE96850-997C-4E15-AD82-64AE8FC2C775}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BE96850-997C-4E15-AD82-64AE8FC2C775}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BE96850-997C-4E15-AD82-64AE8FC2C775}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BE96850-997C-4E15-AD82-64AE8FC2C775}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07C0D9E5-A016-4DDD-BC27-7C5D964DD036}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07C0D9E5-A016-4DDD-BC27-7C5D964DD036}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07C0D9E5-A016-4DDD-BC27-7C5D964DD036}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07C0D9E5-A016-4DDD-BC27-7C5D964DD036}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8BE96850-997C-4E15-AD82-64AE8FC2C775} = {D0AFA7E9-691C-4BA6-9C6F-608E92770E56}
+		{07C0D9E5-A016-4DDD-BC27-7C5D964DD036} = {3B3BF70A-75BB-4232-A51B-629422452380}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,102 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64</Platforms>
+    <AssemblyName>WinShot.EditorOutput.Perf</AssemblyName>
+    <RootNamespace>WinShot.EditorOutput.Perf</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!-- This isolated tool has no PackageReference or ProjectReference items. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="BenchmarkInfrastructure.cs" />
+    <Compile Include="BenchmarkModels.cs" />
+    <Compile Include="DispatcherHeartbeatBenchmark.cs" />
+    <Compile Include="EditorOutputBenchmark.cs" />
+    <Compile Include="GlobalUsings.cs" />
+    <Compile Include="HarnessSelfTest.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\src\WinShot.App\Editor\Annotations.cs"
+             Link="MeasuredSource\Annotations.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\Editor\EditorDocument.cs"
+             Link="MeasuredSource\EditorDocument.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\Editor\EditorResultPreparationCache.cs"
+             Link="MeasuredSource\EditorResultPreparationCache.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\Editor\EditorResultPreparationCoordinator.cs"
+             Link="MeasuredSource\EditorResultPreparationCoordinator.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\Editor\PixelFilters.cs"
+             Link="MeasuredSource\PixelFilters.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\Editor\RegionEffectProcessing.cs"
+             Link="MeasuredSource\RegionEffectProcessing.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\EncodedImagePayload.cs"
+             Link="MeasuredSource\EncodedImagePayload.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\ImageBeautifier.cs"
+             Link="MeasuredSource\ImageBeautifier.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\ImageSaveService.cs"
+             Link="MeasuredSource\ImageSaveService.cs" />
+    <Compile Include="..\..\..\src\WinShot.App\StillImageEncodingService.cs"
+             Link="MeasuredSource\StillImageEncodingService.cs" />
+    <Compile Include="..\..\..\src\WinShot.Core\Naming\FileNameTemplate.cs"
+             Link="MeasuredSource\FileNameTemplate.cs" />
+    <Compile Include="..\..\..\src\WinShot.Core\Naming\OutputFileReservation.cs"
+             Link="MeasuredSource\OutputFileReservation.cs" />
+    <Compile Include="..\..\..\src\WinShot.Core\Settings\AppSettings.cs"
+             Link="MeasuredSource\AppSettings.cs" />
+
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\Annotations.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.Annotations.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\EditorDocument.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.EditorDocument.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\EditorResultPreparationCache.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.EditorResultPreparationCache.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\EditorResultPreparationCoordinator.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.EditorResultPreparationCoordinator.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\PixelFilters.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.PixelFilters.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\Editor\RegionEffectProcessing.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.RegionEffectProcessing.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\EncodedImagePayload.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.EncodedImagePayload.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\ImageBeautifier.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.ImageBeautifier.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\ImageSaveService.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.ImageSaveService.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.App\StillImageEncodingService.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.StillImageEncodingService.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.Core\Naming\FileNameTemplate.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.FileNameTemplate.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.Core\Naming\OutputFileReservation.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.OutputFileReservation.cs" />
+    <EmbeddedResource Include="..\..\..\src\WinShot.Core\Settings\AppSettings.cs"
+                      LogicalName="WinShot.EditorOutput.Measured.AppSettings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="BenchmarkInfrastructure.cs"
+                      LogicalName="WinShot.EditorOutput.Harness.BenchmarkInfrastructure.cs" />
+    <EmbeddedResource Include="BenchmarkModels.cs"
+                      LogicalName="WinShot.EditorOutput.Harness.BenchmarkModels.cs" />
+    <EmbeddedResource Include="DispatcherHeartbeatBenchmark.cs"
+                      LogicalName="WinShot.EditorOutput.Harness.DispatcherHeartbeatBenchmark.cs" />
+    <EmbeddedResource Include="EditorOutputBenchmark.cs"
+                      LogicalName="WinShot.EditorOutput.Harness.EditorOutputBenchmark.cs" />
+    <EmbeddedResource Include="GlobalUsings.cs"
+                      LogicalName="WinShot.EditorOutput.Harness.GlobalUsings.cs" />
+    <EmbeddedResource Include="HarnessSelfTest.cs"
+                      LogicalName="WinShot.EditorOutput.Harness.HarnessSelfTest.cs" />
+    <EmbeddedResource Include="Program.cs"
+                      LogicalName="WinShot.EditorOutput.Harness.Program.cs" />
+    <EmbeddedResource Include="Test-EditorOutputHarness.ps1"
+                      LogicalName="WinShot.EditorOutput.Harness.Test-EditorOutputHarness.ps1" />
+    <EmbeddedResource Include="WinShot.EditorOutput.Perf.csproj"
+                      LogicalName="WinShot.EditorOutput.Harness.WinShot.EditorOutput.Perf.csproj" />
+  </ItemGroup>
+
+</Project>

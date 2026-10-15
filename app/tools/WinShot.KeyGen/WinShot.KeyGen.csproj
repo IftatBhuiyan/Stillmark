@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>WinShot.KeyGen</RootNamespace>
+    <AssemblyName>WinShot.KeyGen</AssemblyName>
+    <!-- Seller-side signing tool. Never distributed with the app. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WinShot.Licensing\WinShot.Licensing.csproj" />
+  </ItemGroup>
+
+</Project>

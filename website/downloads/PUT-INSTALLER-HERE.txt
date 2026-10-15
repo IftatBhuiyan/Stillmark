@@ -1,0 +1,10 @@
+Do not place a Windows installer in this website repository.
+
+    This directory is intentionally non-publishable.
+
+The current website links to no installer. Repository, Debug/Release, portable,
+and unsigned engineering artifacts are not customer downloads.
+
+A future download may be enabled only from an approved immutable production
+origin after the signed manifest, exact checksum, release notes, policies, and
+clean install/update/rollback/uninstall evidence all pass.

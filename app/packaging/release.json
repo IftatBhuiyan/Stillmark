@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "applicationName": "WinShot",
+  "packageId": "PROVISIONAL.WinShot",
+  "publisher": "UNSET",
+  "targetFramework": "net10.0-windows10.0.19041.0",
+  "runtimeIdentifier": "win-x64",
+  "validationLimits": {
+    "maximumItemCount": 4096,
+    "maximumFileCount": 2048,
+    "maximumFileBytes": 134217728,
+    "maximumTextFileBytes": 16777216,
+    "maximumTotalBytes": 536870912,
+    "maximumArchiveBytes": 268435456,
+    "maximumPathCharacters": 512
+  },
+  "appHostFiles": [
+    "WinShot.exe"
+  ],
+  "packagedStartupFiles": [
+    "WinShot.Startup.exe"
+  ],
+  "buildInjectedFiles": [
+    "ScreenRecorderLib.dll"
+  ],
+  "metadataFiles": [
+    "commercial-config.json",
+    "component-evidence.json",
+    "DOTNET-LICENSE.txt",
+    "DOTNET-THIRD-PARTY-NOTICES.txt",
+    "WinShot.deps.json",
+    "WinShot.runtimeconfig.json",
+    "startup-build.json",
+    "THIRD-PARTY-NOTICES.md",
+    "UNSIGNED-TEST-ARTIFACT.txt",
+    "payload-attribution.json",
+    "SBOM.cdx.json",
+    "release-manifest.json",
+    "SHA256SUMS"
+  ],
+  "allowedSatelliteCultures": [
+    "cs",
+    "de",
+    "es",
+    "fr",
+    "it",
+    "ja",
+    "ko",
+    "pl",
+    "pt-BR",
+    "ru",
+    "tr",
+    "zh-Hans",
+    "zh-Hant"
+  ],
+  "requiredPayloadFiles": [
+    "WinShot.exe",
+    "WinShot.Startup.exe",
+    "WinShot.dll",
+    "WinShot.Core.dll",
+    "WinShot.Capture.dll",
+    "WinShot.Interop.dll",
+    "WinShot.Licensing.dll",
+    "WinShot.deps.json",
+    "WinShot.runtimeconfig.json",
+    "startup-build.json",
+    "coreclr.dll",
+    "clrjit.dll",
+    "hostfxr.dll",
+    "hostpolicy.dll",
+    "System.Private.CoreLib.dll",
+    "ScreenRecorderLib.dll",
+    "Velopack.dll",
+    "commercial-config.json",
+    "component-evidence.json",
+    "DOTNET-LICENSE.txt",
+    "DOTNET-THIRD-PARTY-NOTICES.txt",
+    "THIRD-PARTY-NOTICES.md",
+    "UNSIGNED-TEST-ARTIFACT.txt"
+  ]
+}

@@ -1,0 +1,187 @@
+<Window x:Class="WinShot.App.Video.VideoEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Stillmark Video Editor"
+        Width="920" Height="760"
+        MinWidth="700" MinHeight="560"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        WindowStartupLocation="CenterScreen"
+        AutomationProperties.Name="Video editor">
+    <Grid KeyboardNavigation.TabNavigation="Cycle">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Preview -->
+        <Border Grid.Row="0" Margin="0" CornerRadius="0" Background="#FF0C0C0F"
+                BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0" ClipToBounds="True">
+            <Grid MouseLeftButtonUp="OnPreviewClick">
+                <MediaElement x:Name="Player"
+                              LoadedBehavior="Manual"
+                              ScrubbingEnabled="True"
+                              Stretch="Uniform"
+                              MediaOpened="OnMediaOpened"
+                              MediaEnded="OnMediaEnded"
+                              MediaFailed="OnMediaFailed" />
+                <Border x:Name="BigPlayOverlay" Width="66" Height="66" CornerRadius="33"
+                        Background="#B31F1F24" BorderBrush="#33FFFFFF" BorderThickness="1"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                    <TextBlock x:Name="BigPlayGlyph" FontFamily="{StaticResource IconFont}" FontSize="24"
+                               Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Trim strip -->
+        <Border Grid.Row="1" Margin="14,0,14,8" CornerRadius="0" Background="Transparent"
+                BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0" Padding="10,9">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="PlayButton" Style="{StaticResource ToolbarButton}" Width="40" Height="40"
+                        Click="OnPlayPause" ToolTip="Preview the trimmed range (Space)"
+                        TabIndex="0"
+                        AutomationProperties.Name="Play preview"
+                        AutomationProperties.HelpText="Play or pause the selected trim range.">
+                    <TextBlock x:Name="PlayGlyph" FontFamily="{StaticResource IconFont}" FontSize="15" />
+                </Button>
+
+                <Canvas Grid.Column="1" x:Name="TrimCanvas" Height="42" Margin="10,0"
+                        Background="Transparent" SizeChanged="OnTrimCanvasSized"
+                        AutomationProperties.Name="Trim range"
+                        AutomationProperties.HelpText="Use the start and end trim handles to choose the exported range." />
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock x:Name="TrimRangeText" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextAlignment="Center" Margin="0,0,0,4" />
+                    <Button Content="Reset trim" Style="{StaticResource TextCommand}" Padding="10,3" FontSize="11" Click="OnResetTrim"
+                            TabIndex="3"
+                            AutomationProperties.Name="Reset trim range"
+                            AutomationProperties.HelpText="Restore the full recording as the export range." />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Settings -->
+        <Expander Grid.Row="2" Header="Export options" IsExpanded="False" Margin="20,4,20,12"
+                  Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"
+                  AutomationProperties.Name="Export options">
+        <Grid Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Margin="0,0,4,0" CornerRadius="0" Background="Transparent"
+                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="82" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock x:Name="VideoQualityHeading" Style="{StaticResource SettingsRowLabel}" Text="Video quality" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Slider x:Name="QualitySlider" Style="{StaticResource SeekSlider}" Width="140"
+                                Minimum="0.2" Maximum="1.0" Value="0.85" VerticalAlignment="Center"
+                                ValueChanged="OnQualityChanged" TabIndex="4"
+                                AutomationProperties.LabeledBy="{Binding ElementName=VideoQualityHeading}"
+                                AutomationProperties.HelpText="Use the arrow keys to change the output video quality." />
+                        <TextBlock x:Name="QualityLabel" Text="High" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" Margin="10,0,0,0"
+                                   AutomationProperties.LiveSetting="Polite" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="DimensionsHeading" Grid.Row="1" Style="{StaticResource SettingsRowLabel}"
+                               Text="Dimensions" Margin="0,12,16,0" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="DimensionsBox" Width="210"
+                              HorizontalAlignment="Left" Margin="0,10,0,0"
+                              SelectionChanged="OnDimensionPreset" TabIndex="5"
+                              AutomationProperties.LabeledBy="{Binding ElementName=DimensionsHeading}"
+                              AutomationProperties.HelpText="Choose the output video dimensions." />
+
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock x:Name="WidthHeading" Text="Width" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
+                                   Margin="0,0,7,0" />
+                        <TextBox x:Name="WidthBox" Width="64" TextChanged="OnSizeBoxChanged" TabIndex="6"
+                                 AutomationProperties.LabeledBy="{Binding ElementName=WidthHeading}"
+                                 AutomationProperties.HelpText="Output width in pixels." />
+                        <TextBlock x:Name="HeightHeading" Text="Height" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
+                                   Margin="14,0,7,0" />
+                        <TextBox x:Name="HeightBox" Width="64" TextChanged="OnSizeBoxChanged" TabIndex="7"
+                                 AutomationProperties.LabeledBy="{Binding ElementName=HeightHeading}"
+                                 AutomationProperties.HelpText="Output height in pixels." />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Margin="4,0,0,0" CornerRadius="0" Background="Transparent"
+                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="64" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="AudioHeading" Style="{StaticResource SettingsRowLabel}" Text="Audio"
+                               VerticalAlignment="Top" Margin="0,2,16,0" />
+                    <StackPanel Grid.Column="1" AutomationProperties.LabeledBy="{Binding ElementName=AudioHeading}">
+                        <RadioButton x:Name="AudioKeep" Content="Keep original audio" IsChecked="True"
+                                     Margin="0,0,0,8" Checked="OnAnythingChanged" TabIndex="8" />
+                        <RadioButton x:Name="AudioMono" Content="Convert to mono"
+                                     Margin="0,0,0,8" Checked="OnAnythingChanged" TabIndex="9" />
+                        <RadioButton x:Name="AudioMute" Content="Mute"
+                                     Margin="0,0,0,8" Checked="OnAnythingChanged" TabIndex="10" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        </Expander>
+
+        <!-- Footer -->
+        <Border Grid.Row="3" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0,1,0,0" Padding="16,11">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="CancelButton" Content="Cancel" Style="{StaticResource TextCommand}" MinWidth="70"
+                        HorizontalAlignment="Left" Click="OnCancel" TabIndex="12"
+                        AutomationProperties.Name="Cancel and close video editor" />
+                <TextBlock x:Name="EstimateText" Grid.Column="1" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Margin="16,0"
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                           AutomationProperties.Name="Video conversion status"
+                           AutomationProperties.LiveSetting="Polite" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ProgressBar x:Name="ConvertProgress" Width="150" Height="6" Margin="0,0,12,0"
+                                 Visibility="Collapsed" Minimum="0" Maximum="1" VerticalAlignment="Center"
+                                 AutomationProperties.Name="Conversion progress" />
+                    <Button x:Name="ConvertButton" Content="Export video" MinWidth="112"
+                            Style="{StaticResource AccentButton}" Click="OnConvert" TabIndex="13"
+                            AutomationProperties.Name="Export video"
+                            AutomationProperties.HelpText="Export a new video using the selected trim, dimensions, quality, and audio settings." />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

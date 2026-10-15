@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/IftatBhuiyan/Stillmark/security/advisories/new
+    about: Report vulnerabilities privately, not in a public issue.
+  - name: Usage questions
+    url: https://github.com/IftatBhuiyan/Stillmark/discussions
+    about: Ask the community for help.

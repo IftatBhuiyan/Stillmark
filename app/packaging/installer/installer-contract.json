@@ -1,0 +1,401 @@
+{
+  "schemaVersion": 3,
+  "contractKind": "WinShotInstallerUpdateContract",
+  "readiness": {
+    "productionApproved": false,
+    "publicDistributionAllowed": false
+  },
+  "identity": {
+    "approved": false,
+    "applicationName": "WinShot",
+    "executableName": "WinShot",
+    "packageId": "PROVISIONAL.WinShot",
+    "dataDirectoryName": "WinShot",
+    "publisherDisplayName": "UNSET",
+    "startupValueName": "WinShot"
+  },
+  "install": {
+    "scope": "PerUser",
+    "architecture": "x64",
+    "elevation": "Never",
+    "technology": "UNSET",
+    "implementationApproved": false,
+    "paths": {
+      "installRoot": "{LocalAppData}\\{PackageId}",
+      "stableLauncher": "{InstallRoot}\\{ExecutableName}.exe",
+      "activeVersionPointer": "{InstallRoot}\\active-version",
+      "versionedPayload": "{InstallRoot}\\versions\\{Version}\\{ExecutableName}.exe",
+      "updateStaging": "{InstallRoot}\\updates\\staging\\{Version}"
+    },
+    "stableLauncherContract": {
+      "installerOwned": true,
+      "survivesVersionReplacement": true,
+      "shortcutsTargetStableLauncher": true,
+      "startupTargetsStableLauncher": true,
+      "activateOnlyAfterValidation": true,
+      "windowsGuiX64": true,
+      "executionLevel": "AsInvoker",
+      "requireValidAuthenticode": true,
+      "requireMatchingPublisherIdentity": true,
+      "activationPointerFormat": "CanonicalAsciiSafeVersionSegment",
+      "activationPointerMaximumBytes": 128,
+      "activationPointerAtomicCreateOrReplace": true,
+      "activationPointerFlushedBeforeReplace": true,
+      "holdActivationPointerThroughProcessCreation": true,
+      "scanVersionDirectories": false,
+      "automaticVersionFallback": false,
+      "versionPayloadsImmutable": true,
+      "retainReferencedPayloadUntilLauncherRelease": true,
+      "shellExecute": false,
+      "inheritHandles": false
+    }
+  },
+  "startup": {
+    "registryHive": "HKCU",
+    "registryKey": "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+    "valueName": "{StartupValueName}",
+    "command": "\"{StableLauncher}\" --tray",
+    "preferenceOwner": "ApplicationPersistedPreference",
+    "preserveUserOptOut": true,
+    "missingRegistrationIsConsent": false,
+    "unconfiguredAction": "NoMutation",
+    "disabledAction": "RemoveOwnedValue",
+    "enabledAction": "WriteExpectedOwnedValue",
+    "installAction": "NoMutation",
+    "updateAction": "RepairOnlyWhenPersistedEnabled",
+    "uninstallAction": "RemoveOwnedValue"
+  },
+  "dataOwnership": {
+    "roots": {
+      "roamingDataRoot": "{RoamingAppData}\\{DataDirectoryName}",
+      "localDataRoot": "{LocalAppData}\\{DataDirectoryName}",
+      "mustRemainDistinctFromInstallRoot": true,
+      "canonicalExactRootRequired": true,
+      "rejectEnvironmentRoot": true,
+      "rejectReparsePoints": true,
+      "followReparsePoints": false
+    },
+    "filesystem": {
+      "settings": {
+        "root": "{RoamingDataRoot}",
+        "files": [
+          "settings.json",
+          "settings.json.tmp",
+          "settings.json.corrupt.json",
+          "settings.json.corrupt.json.tmp"
+        ],
+        "directories": []
+      },
+      "licenseAndTrialState": {
+        "root": "{LocalDataRoot}",
+        "files": [
+          "license.dat",
+          "license.dat.{GuidN}.tmp",
+          "trial.dat"
+        ],
+        "directories": []
+      },
+      "managedHistory": {
+        "root": "{LocalDataRoot}",
+        "files": [
+          "history.json",
+          "history.json.{GuidN}.tmp"
+        ],
+        "directories": [
+          "History"
+        ]
+      },
+      "clipboardBacking": {
+        "root": "{LocalDataRoot}",
+        "files": [],
+        "directories": [
+          "Clipboard"
+        ]
+      },
+      "recoverableMedia": {
+        "root": "{LocalDataRoot}",
+        "files": [],
+        "directories": [
+          "tmp"
+        ]
+      },
+      "privacySafeLogs": {
+        "root": "{LocalDataRoot}",
+        "files": [
+          "error.log",
+          "error.1.log"
+        ],
+        "directories": []
+      },
+      "crashRecoveryState": {
+        "root": "{LocalDataRoot}",
+        "files": [
+          "recovery-state.json",
+          "recovery-state.json.{GuidN}.tmp"
+        ],
+        "directories": []
+      }
+    },
+    "registry": {
+      "startup": {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "valueName": "{StartupValueName}",
+        "removeOnlyWhenInstallerRecordedCommandMatches": true,
+        "deleteContainingKey": false
+      },
+      "trial": {
+        "hive": "HKCU",
+        "key": "Software\\{DataDirectoryName}",
+        "valueName": "Tk",
+        "removeOnlyWithExplicitPrivateDataChoice": true,
+        "deleteContainingKeyOnlyWhenEmpty": true
+      }
+    },
+    "userSelectedOutput": {
+      "source": "ApplicationPersistedSaveDirectory",
+      "isProductOwnedRoot": false,
+      "traverseOnUninstall": false,
+      "deleteRecordingWorkspacesOnUninstall": false,
+      "recordingWorkspacePrefix": ".winshot-recording-"
+    }
+  },
+  "prerequisites": {
+    "dotnet": {
+      "delivery": "BundledSelfContained",
+      "externalRuntimeRequired": false
+    },
+    "visualCppRuntime": {
+      "requiredFor": "RecordingOnly",
+      "architecture": "x64",
+      "delivery": "OfficialCentralRedistributableBootstrapper",
+      "elevation": "OnlyAfterExplicitUserConsentForOfficialRedistributable",
+      "sourceUri": "UNSET",
+      "sha256": "UNSET",
+      "expectedSignerSubject": "UNSET",
+      "missingBehavior": "ContinueInstallWithRecordingUnavailableAndActionableNotice"
+    },
+    "mediaFoundation": {
+      "requiredFor": "RecordingOnly",
+      "delivery": "WindowsOptionalFeatureGuidance",
+      "bundleSystemDlls": false,
+      "requestElevation": false,
+      "missingBehavior": "ContinueInstallWithRecordingUnavailableAndActionableNotice",
+      "restartBehavior": "NeverForceRestart"
+    }
+  },
+  "updates": {
+    "technology": "UNSET",
+    "implementationApproved": false,
+    "transport": "HttpsOnly",
+    "networkFailureBehavior": "NeverBlockCaptureOrApplicationStartup",
+    "channels": {
+      "separatePerPaidMajor": true,
+      "stableManifestUri": "UNSET",
+      "betaManifestUri": "UNSET"
+    },
+    "candidateTrust": {
+      "requireSha256": true,
+      "requireValidAuthenticode": true,
+      "requireExactPublisher": true,
+      "requireRfc3161Timestamp": true,
+      "requireMatchingChannel": true,
+      "requireMatchingArchitecture": true,
+      "requireEntitledPaidMajor": true,
+      "descriptorSignature": {
+        "implementationApproved": false,
+        "schemaVersion": 1,
+        "descriptorFileName": "update-candidate.json",
+        "signatureFileName": "update-candidate.sig",
+        "releaseManifestFileName": "release-manifest.json",
+        "productionPackageKind": "SIGNED_PRODUCTION",
+        "signatureAlgorithm": "RSA-PSS-SHA256",
+        "minimumRsaBits": 3072,
+        "maximumDescriptorBytes": 32768,
+        "capabilityLifetimeSeconds": 600,
+        "requireExactStagingInventory": true,
+        "requireReleaseManifestIdentityBinding": true,
+        "requirePlatformAuthenticityEvidence": true,
+        "publicKeySha256": "UNSET"
+      }
+    },
+    "staging": {
+      "path": "{UpdateStaging}",
+      "activateOnlyAfterCompleteValidation": true,
+      "neverExecuteFromDownloadLocation": true
+    },
+    "apply": {
+      "deferWhileCaptureActive": true,
+      "deferWhileRecordingActive": true,
+      "deferWhileTranscodeActive": true,
+      "requireExplicitRestartToApply": true,
+      "unregisterApplicationRestartImmediatelyBeforeHandoff": true,
+      "handoffExecutableMustBeSignedAndInstallerOwned": true,
+      "shellExecuteUntrustedArguments": false,
+      "handoff": {
+        "retainQuiescenceUntilParentExitOrConfirmedAbort": true,
+        "parentShutdownOnlyAfterCommitAccepted": true,
+        "restoreApplicationRestartOnConfirmedAbort": true,
+        "twoPhaseCommitRequired": true,
+        "bindExactVerifiedCandidate": true,
+        "maximumWaitSeconds": 30,
+        "transport": "UNSET",
+        "protocolVersion": "UNSET",
+        "implementationApproved": false
+      }
+    },
+    "rollback": {
+      "activation": "AtomicActiveVersionPointerSwitchAfterHealthCheck",
+      "failedActivation": "RestorePriorActiveVersionPointer",
+      "keepPreviousSignedFullPackage": true,
+      "postActivationPolicy": "SignedHigherVersionForwardFixOnly",
+      "allowUnverifiedDowngrade": false,
+      "activationHealthCheckOwnedByUpdater": true,
+      "preExitCommitIsActivationHealthCheck": false,
+      "implementationApproved": false
+    }
+  },
+  "uninstall": {
+    "removeInstallerOwnedBinaries": true,
+    "removeShortcuts": true,
+    "removeUpdaterState": true,
+    "removeOwnedStartupValue": true,
+    "automaticLicenseDeactivation": false,
+    "data": {
+      "settings": "RetainByDefault",
+      "licenseAndTrialState": "RetainByDefault",
+      "managedHistory": "RetainByDefault",
+      "clipboardBacking": "Remove",
+      "recoverableMedia": "RetainByDefault",
+      "privacySafeLogs": "Remove",
+      "crashRecoveryState": "Remove",
+      "userSelectedOutput": "NeverDelete",
+      "privateAppDataRemoval": "SeparateExplicitUncheckedChoice",
+      "deleteOutsideDeclaredProductRoots": false
+    },
+    "explicitPrivateDataRemoval": {
+      "defaultSelected": false,
+      "retainedGroupsRemoved": [
+        "settings",
+        "licenseAndTrialState",
+        "managedHistory",
+        "recoverableMedia"
+      ],
+      "removeOnlyDeclaredOwnedData": true,
+      "requiresApplicationStopped": true,
+      "requiresRecoveryWarning": true,
+      "requiresLicenseDeactivationWarning": true,
+      "removesTrialRegistryValue": true,
+      "neverContactsLicenseProvider": true,
+      "neverDeletesUserSelectedOutput": true
+    }
+  },
+  "payload": {
+    "unsignedEngineeringArtifactsAllowed": false,
+    "keyGeneratorAllowed": false,
+    "privateSigningMaterialAllowed": false,
+    "debugOrTestPayloadAllowed": false,
+    "productionManifestPackageKind": "SIGNED_PRODUCTION",
+    "requiredMetadata": [
+      "activation-release-attestation.v1",
+      "activation-release-attestation.sig",
+      "EULA.txt",
+      "PRIVACY-NOTICE.txt",
+      "RELEASE-NOTES.txt",
+      "SBOM.cdx.json",
+      "SHA256SUMS",
+      "THIRD-PARTY-NOTICES.txt",
+      "release-manifest.json"
+    ],
+    "releaseAttestation": {
+      "implementationApproved": false,
+      "schemaVersion": 1,
+      "attestationKind": "WinShotActivationReleaseAttestation",
+      "attestationFileName": "activation-release-attestation.v1",
+      "signatureFileName": "activation-release-attestation.sig",
+      "canonicalFormat": "StrictUtf8NoBomLfFinalLfTabDelimitedV1",
+      "canonicalHeaderOrder": [
+        "WINSHOT-ACTIVATION-RELEASE-ATTESTATION-V1",
+        "package-id",
+        "version",
+        "channel",
+        "runtime-identifier",
+        "paid-major",
+        "release-manifest-sha256",
+        "file-count"
+      ],
+      "inventoryRecordFields": [
+        "file",
+        "sha256",
+        "bytes",
+        "path"
+      ],
+      "inventoryPathOrder": "Ordinal",
+      "inventoryExclusions": [
+        "activation-release-attestation.v1",
+        "activation-release-attestation.sig"
+      ],
+      "publicKeyFileFormat": "DERSubjectPublicKeyInfo",
+      "signatureAlgorithm": "RSA-PSS-SHA256",
+      "minimumRsaBits": 3072,
+      "maximumAttestationBytes": 4194304,
+      "maximumSignatureBytes": 1024,
+      "expectedVersion": "UNSET",
+      "expectedChannel": "UNSET",
+      "expectedRuntimeIdentifier": "win-x64",
+      "expectedPaidMajor": 1,
+      "requireExactPackageIdentity": true,
+      "requireExactReleaseManifestSha256": true,
+      "requireExactPayloadInventory": true,
+      "requireUpdateDescriptorKeyReuse": true,
+      "publicKeySha256": "UNSET"
+    },
+    "publisherSignatureTargets": [
+      "WinShot.Capture.dll",
+      "WinShot.Core.dll",
+      "WinShot.Interop.dll",
+      "WinShot.Licensing.dll",
+      "WinShot.dll",
+      "WinShot.exe",
+      "WinShot.Startup.exe"
+    ],
+    "thirdPartyDependencies": [
+      {
+        "approved": false,
+        "payloadFile": "ScreenRecorderLib.dll",
+        "componentName": "ScreenRecorderLib",
+        "sourcePackageId": "ScreenRecorderLib",
+        "sourcePackageVersion": "6.3.0",
+        "sourcePackageSha256": "UNSET",
+        "payloadSha256": "UNSET",
+        "trustDecision": "UNSET",
+        "signatureDisposition": "PreserveUpstreamSignatureState",
+        "expectedSignerSubject": "UNSET",
+        "expectedLeafThumbprint": "UNSET",
+        "license": "MIT",
+        "noticeFile": "THIRD-PARTY-NOTICES.txt",
+        "authorship": "ThirdPartyNotWinShotOwned"
+      }
+    ]
+  },
+  "signing": {
+    "approved": false,
+    "provider": "AzureArtifactSigning",
+    "accountName": "UNSET",
+    "certificateProfileName": "UNSET",
+    "certificateProfileType": "PublicTrust",
+    "expectedPublisherSubject": "UNSET",
+    "expectedSubscriberIdentityEku": "UNSET",
+    "rfc3161EvidenceImplementationApproved": false,
+    "timestampUri": "http://timestamp.acs.microsoft.com/"
+  },
+  "approvals": {
+    "identity": false,
+    "installerTechnology": false,
+    "signing": false,
+    "prerequisiteBootstrap": false,
+    "updateChannels": false,
+    "uninstallAndRetention": false,
+    "legalPayload": false
+  }
+}

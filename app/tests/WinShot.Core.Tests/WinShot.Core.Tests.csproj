@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU;x64</Platforms>
+    <DefineConstants Condition="'$(WinShotLocalDeveloperUse)' == 'true'">$(DefineConstants);WINSHOT_LOCAL_DEVELOPER_USE_EXPECTED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WinShot.App\WinShot.App.csproj"
+                      AdditionalProperties="Platform=x64" />
+    <ProjectReference Include="..\..\src\WinShot.Core\WinShot.Core.csproj" />
+    <ProjectReference Include="..\..\src\WinShot.Capture\WinShot.Capture.csproj" />
+    <ProjectReference Include="..\..\src\WinShot.Licensing\WinShot.Licensing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\tools\WinShot.KeyGen\KeyCustody.cs"
+             Link="SellerTools\KeyCustody.cs" />
+    <Compile Include="..\..\src\WinShot.Launcher\LauncherContracts.cs"
+             Link="StableLauncher\LauncherContracts.cs" />
+    <Compile Include="..\..\src\WinShot.Launcher\LauncherIdentity.cs"
+             Link="StableLauncher\LauncherIdentity.cs" />
+    <Compile Include="..\..\src\WinShot.Launcher\LauncherRuntime.cs"
+             Link="StableLauncher\LauncherRuntime.cs" />
+    <Compile Include="..\..\src\WinShot.Launcher\LauncherReleaseAttestationVerifier.cs"
+             Link="StableLauncher\LauncherReleaseAttestationVerifier.cs" />
+    <Compile Include="..\..\src\WinShot.Launcher\WindowsLauncherTrustVerifier.cs"
+             Link="StableLauncher\WindowsLauncherTrustVerifier.cs" />
+    <Compile Include="..\..\src\WinShot.Startup\PackagedStartupBootstrapContracts.cs"
+             Link="PackagedStartup\PackagedStartupBootstrapContracts.cs" />
+    <Compile Include="..\..\src\WinShot.Startup\PackagedStartupBootstrapRuntime.cs"
+             Link="PackagedStartup\PackagedStartupBootstrapRuntime.cs" />
+  </ItemGroup>
+
+</Project>

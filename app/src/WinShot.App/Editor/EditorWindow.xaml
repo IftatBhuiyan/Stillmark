@@ -1,0 +1,141 @@
+<Window x:Class="WinShot.App.Editor.EditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:editor="clr-namespace:WinShot.App.Editor"
+        Title="Stillmark Editor"
+        Icon="/Assets/winshot-master.png"
+        Width="1060" Height="720"
+        MinWidth="780" MinHeight="520"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style x:Key="FormattingMenuItem" TargetType="MenuItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="Row" Background="Transparent" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}" MinWidth="140">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" />
+                                <ContentPresenter Grid.Column="1" ContentSource="Header"
+                                                  RecognizesAccessKey="True" VerticalAlignment="Center" />
+                                <TextBlock x:Name="Check" Grid.Column="2" Text="&#xE73E;"
+                                           FontFamily="{StaticResource IconFont}" FontSize="11"
+                                           VerticalAlignment="Center" HorizontalAlignment="Right"
+                                           Visibility="Collapsed" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="{DynamicResource HoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="FormattingMenu" TargetType="ContextMenu">
+            <Setter Property="ItemContainerStyle" Value="{StaticResource FormattingMenuItem}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderStrongBrush}"
+                                BorderThickness="1" CornerRadius="5" Padding="4">
+                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid KeyboardNavigation.TabNavigation="Cycle"
+          AutomationProperties.Name="Image editor">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="16,4,16,0">
+            <DockPanel LastChildFill="True" Margin="0,0,0,4">
+                <StackPanel x:Name="UtilityPanel" Orientation="Horizontal" DockPanel.Dock="Right"
+                            Margin="20,0,0,0" AutomationProperties.Name="Document tools" />
+                <StackPanel x:Name="ToolPanel" Orientation="Horizontal"
+                            AutomationProperties.Name="Annotation tools" />
+            </DockPanel>
+            <StackPanel x:Name="StylePanel" Orientation="Horizontal" Margin="2,0,0,8"
+                        AutomationProperties.Name="Annotation formatting" />
+            <WrapPanel x:Name="BackdropPanel" Visibility="Collapsed" Margin="2,0,0,10"
+                       AutomationProperties.Name="Background options" />
+        </StackPanel>
+        <Border Grid.Row="1"
+                Margin="0"
+                CornerRadius="0"
+                Background="{DynamicResource InputBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0"
+                ClipToBounds="True">
+            <Grid>
+                <editor:EditorCanvas x:Name="Canvas"
+                                     Focusable="True"
+                                     KeyboardNavigation.IsTabStop="True"
+                                     KeyboardNavigation.TabIndex="90"
+                                     AutomationProperties.Name="Image editing canvas"
+                                     AutomationProperties.HelpText="Use the pointer or keyboard to edit the image. Scroll the mouse wheel or use two-finger touchpad scrolling to zoom around the pointer. Arrow keys move the keyboard cursor one pixel; hold Shift to move ten pixels. Enter or Space begins or finishes the selected annotation. Escape cancels the active annotation or clears the selection." />
+                <Canvas x:Name="TextEditLayer" IsHitTestVisible="False" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="18,8,16,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="ZoomText" Text="100%" FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               ToolTip="Scroll to zoom around the pointer" AutomationProperties.Name="Canvas zoom" />
+                    <TextBlock x:Name="StatusLeft" FontSize="11" Margin="12,0,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               AutomationProperties.Name="Document status" AutomationProperties.LiveSetting="Polite" />
+                </StackPanel>
+                <TextBlock x:Name="StatusRight" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                           AutomationProperties.AutomationId="EditorStatus"
+                           AutomationProperties.Name="{Binding Text, RelativeSource={RelativeSource Self}}"
+                           AutomationProperties.LiveSetting="Polite" />
+            </StackPanel>
+            <Border x:Name="DragPill" Grid.Column="1" Background="Transparent" Padding="10,8"
+                    Margin="0,0,16,0" VerticalAlignment="Center" Cursor="Hand"
+                    ToolTip="Drag the edited image into another app. Keyboard: Ctrl+C, then Ctrl+V."
+                    AutomationProperties.Name="Drag result with pointer"
+                    AutomationProperties.HelpText="For keyboard transfer, press Ctrl+C, then Ctrl+V in the target app.">
+                <TextBlock Text="Drag image" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+            </Border>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="BottomPin" Style="{StaticResource ToolbarButton}" TabIndex="100"
+                        ToolTip="Pin result to the screen" AutomationProperties.Name="Pin result" />
+                <Button x:Name="BottomCopy" Style="{StaticResource ToolbarButton}" TabIndex="101"
+                        ToolTip="Copy result (Ctrl+C)" AutomationProperties.Name="Copy result for pasting"
+                        AutomationProperties.AcceleratorKey="Ctrl+C" />
+                <StackPanel x:Name="ActionPanel" Orientation="Horizontal" Margin="8,0,0,0"
+                            AutomationProperties.Name="Save actions" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

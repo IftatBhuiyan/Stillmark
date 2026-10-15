@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <!-- UI-free licensing core (like WinShot.Core). No external packages: crypto is built-in
+       (System.Security.Cryptography), registry + DPAPI come from the shared Windows targeting pack.
+       Keeping this dependency-free is deliberate — it minimizes supply-chain surface. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WinShot.Core.Tests" />
+  </ItemGroup>
+
+</Project>

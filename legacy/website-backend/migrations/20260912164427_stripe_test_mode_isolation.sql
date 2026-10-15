@@ -1,0 +1,567 @@
+-- Keep Stripe test and live commerce state isolated at the database boundary.
+-- The mode column is part of each provider identifier's key, while the RPCs
+-- reject an identifier that already belongs to the other mode.
+
+alter table private.purchase_orders
+  add column is_test boolean not null default false;
+-- Remove the dependent foreign key before replacing its referenced unique key.
+alter table private.payment_blocks
+  drop constraint if exists payment_blocks_provider_event_id_fkey;
+
+alter table private.webhook_events
+  add column is_test boolean not null default false;
+alter table private.payment_blocks
+  add column is_test boolean not null default false;
+alter table private.outbox
+  add column is_test boolean not null default false;
+
+alter table private.purchase_orders
+  drop constraint if exists purchase_orders_stripe_checkout_session_id_key,
+  drop constraint if exists purchase_orders_stripe_payment_intent_id_key;
+alter table private.purchase_orders
+  add constraint purchase_orders_mode_session_key
+    unique (is_test, stripe_checkout_session_id),
+  add constraint purchase_orders_mode_intent_key
+    unique (is_test, stripe_payment_intent_id);
+
+alter table private.webhook_events
+  drop constraint if exists webhook_events_provider_event_id_key;
+alter table private.webhook_events
+  add constraint webhook_events_mode_provider_event_key
+    unique (is_test, provider_event_id);
+
+alter table private.payment_blocks
+  drop constraint if exists payment_blocks_provider_event_id_fkey,
+  drop constraint if exists payment_blocks_provider_event_id_key;
+alter table private.payment_blocks
+  add constraint payment_blocks_mode_provider_event_key
+    unique (is_test, provider_event_id),
+  add constraint payment_blocks_mode_provider_event_fkey
+    foreign key (is_test, provider_event_id)
+    references private.webhook_events (is_test, provider_event_id)
+    on delete restrict;
+
+alter table private.outbox
+  drop constraint if exists outbox_dedupe_key_key;
+alter table private.outbox
+  add constraint outbox_mode_dedupe_key unique (is_test, dedupe_key);
+
+drop function if exists public.relic_fulfill_purchase(
+  text, text, text, uuid, text, timestamptz, timestamptz, text, integer, text
+);
+drop function if exists public.relic_activate_license(uuid, uuid, text, text);
+drop function if exists public.relic_refresh_activation(uuid, uuid, text);
+drop function if exists public.relic_revoke_activation(uuid, uuid);
+drop function if exists public.relic_list_account_licenses(uuid);
+drop function if exists public.relic_list_account_activations(uuid);
+drop function if exists public.relic_record_payment_event(
+  text, text, text, text, text, timestamptz, text
+);
+
+create function public.relic_fulfill_purchase(
+  p_stripe_checkout_session_id text,
+  p_stripe_payment_intent_id text,
+  p_stripe_price_id text,
+  p_user_id uuid,
+  p_original_email text,
+  p_purchased_at timestamptz,
+  p_updates_until timestamptz,
+  p_eligible_release text,
+  p_amount_cents integer,
+  p_currency text,
+  p_test_mode boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_order private.purchase_orders%rowtype;
+  v_blocked boolean;
+begin
+  p_test_mode := coalesce(p_test_mode, false);
+  if p_stripe_checkout_session_id is null or length(p_stripe_checkout_session_id) not between 1 and 255
+     or p_stripe_payment_intent_id is null or length(p_stripe_payment_intent_id) not between 1 and 255
+     or p_stripe_price_id is null or length(p_stripe_price_id) not between 1 and 255
+     or p_user_id is null or p_original_email is null or length(p_original_email) not between 3 and 320
+     or p_purchased_at is null or p_updates_until is null
+     or p_eligible_release is null or length(p_eligible_release) not between 1 and 100
+     or p_amount_cents is null or p_currency is null or length(p_currency) = 0 then
+    raise exception using errcode = '22023', message = 'purchase fields are incomplete or out of range';
+  end if;
+  if p_amount_cents <> 3000 or lower(p_currency) <> 'usd' then
+    raise exception using errcode = '22023', message = 'configured price must be 3000 USD cents';
+  end if;
+  if p_updates_until <> (((p_purchased_at at time zone 'UTC') + interval '1 year') at time zone 'UTC') then
+    raise exception using errcode = '22023', message = 'updates_until must be exactly one year after purchase';
+  end if;
+
+  -- Serialize both modes on the raw Stripe payment intent so a concurrent
+  -- test/live retry cannot pass the opposite-mode collision check together.
+  perform pg_advisory_xact_lock(hashtextextended(p_stripe_payment_intent_id, 0));
+  if exists (
+    select 1 from private.purchase_orders
+    where not is_test
+      and p_test_mode
+      and (stripe_checkout_session_id = p_stripe_checkout_session_id
+        or stripe_payment_intent_id = p_stripe_payment_intent_id)
+  ) or exists (
+    select 1 from private.purchase_orders
+    where is_test
+      and not p_test_mode
+      and (stripe_checkout_session_id = p_stripe_checkout_session_id
+        or stripe_payment_intent_id = p_stripe_payment_intent_id)
+  ) or exists (
+    select 1 from private.webhook_events
+    where is_test <> p_test_mode
+      and (stripe_checkout_session_id = p_stripe_checkout_session_id
+        or stripe_payment_intent_id = p_stripe_payment_intent_id)
+  ) or exists (
+    select 1 from private.payment_blocks
+    where is_test <> p_test_mode
+      and stripe_payment_intent_id = p_stripe_payment_intent_id
+  ) then
+    raise exception using errcode = 'P0001', message = 'Stripe purchase identifiers belong to another mode';
+  end if;
+
+  select exists (
+    select 1 from private.payment_blocks
+    where is_test = p_test_mode
+      and stripe_payment_intent_id = p_stripe_payment_intent_id
+  ) into v_blocked;
+  if v_blocked then
+    raise exception using errcode = 'P0001', message = 'payment is blocked before fulfillment';
+  end if;
+
+  select * into v_order from private.purchase_orders
+  where is_test = p_test_mode
+    and (stripe_checkout_session_id = p_stripe_checkout_session_id
+      or stripe_payment_intent_id = p_stripe_payment_intent_id)
+  for update;
+
+  if not found then
+    begin
+      insert into private.purchase_orders (
+        stripe_checkout_session_id, stripe_payment_intent_id, stripe_price_id,
+        user_id, original_email, purchased_at, updates_until, eligible_release,
+        amount_cents, currency, is_test
+      ) values (
+        p_stripe_checkout_session_id, p_stripe_payment_intent_id, p_stripe_price_id,
+        p_user_id, p_original_email, p_purchased_at, p_updates_until, p_eligible_release,
+        p_amount_cents, lower(p_currency), p_test_mode
+      ) returning * into v_order;
+    exception when unique_violation then
+      select * into v_order from private.purchase_orders
+      where is_test = p_test_mode
+        and (stripe_checkout_session_id = p_stripe_checkout_session_id
+          or stripe_payment_intent_id = p_stripe_payment_intent_id)
+      for update;
+    end;
+  end if;
+
+  if v_order.id is null then
+    raise exception using errcode = '40001', message = 'purchase fulfillment conflicted; retry';
+  end if;
+  if v_order.is_test <> p_test_mode
+     or v_order.stripe_checkout_session_id <> p_stripe_checkout_session_id
+     or v_order.stripe_payment_intent_id <> p_stripe_payment_intent_id
+     or v_order.stripe_price_id <> p_stripe_price_id
+     or v_order.user_id <> p_user_id
+     or v_order.original_email <> p_original_email
+     or v_order.purchased_at <> p_purchased_at
+     or v_order.updates_until <> p_updates_until
+     or v_order.eligible_release <> p_eligible_release
+     or v_order.amount_cents <> p_amount_cents
+     or v_order.currency <> lower(p_currency) then
+    raise exception using errcode = 'P0001', message = 'immutable purchase fields conflict';
+  end if;
+
+  insert into private.outbox (is_test, dedupe_key, event_type, order_id, payload)
+  values (
+    p_test_mode, 'license-issued:' || v_order.id, 'license.issued', v_order.id,
+    jsonb_build_object('order_id', v_order.id, 'user_id', v_order.user_id)
+  ) on conflict (is_test, dedupe_key) do nothing;
+
+  return jsonb_build_object(
+    'order_id', v_order.id,
+    'user_id', v_order.user_id,
+    'status', v_order.status,
+    'updates_until', v_order.updates_until,
+    'eligible_release', v_order.eligible_release,
+    'seat_limit', v_order.seat_limit,
+    'is_test', v_order.is_test
+  );
+end;
+$$;
+
+create function public.relic_activate_license(
+  p_license_id uuid,
+  p_user_id uuid,
+  p_device_id text,
+  p_device_name text,
+  p_test_mode boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_order private.purchase_orders%rowtype;
+  v_activation private.activations%rowtype;
+  v_active_count integer;
+  v_created boolean := false;
+begin
+  p_test_mode := coalesce(p_test_mode, false);
+  if p_license_id is null or p_user_id is null or p_device_id is null or p_device_id !~ '^[0-9a-f]{64}$' then
+    raise exception using errcode = '22023', message = 'device_id must be lowercase 64-character hex';
+  end if;
+  if p_device_name is null or char_length(p_device_name) not between 1 and 80 then
+    raise exception using errcode = '22023', message = 'device_name must be 1 to 80 characters';
+  end if;
+
+  select * into v_order from private.purchase_orders
+  where id = p_license_id and is_test = p_test_mode for update;
+  if not found or v_order.user_id <> p_user_id then
+    raise exception using errcode = '42501', message = 'license is not owned by this account';
+  end if;
+  if v_order.status <> 'paid' then
+    raise exception using errcode = 'P0001', message = 'license is not active for activation';
+  end if;
+
+  select * into v_activation from private.activations
+  where license_id = p_license_id and device_id = p_device_id and revoked_at is null
+  for update;
+  if found then
+    update private.activations set device_name = p_device_name, last_refreshed_at = now()
+    where id = v_activation.id returning * into v_activation;
+  else
+    select count(*) into v_active_count from private.activations where license_id = p_license_id and revoked_at is null;
+    if v_active_count >= v_order.seat_limit then
+      raise exception using errcode = 'P0002', message = 'license seat limit reached';
+    end if;
+    insert into private.activations (license_id, device_id, device_name)
+    values (p_license_id, p_device_id, p_device_name)
+    returning * into v_activation;
+    v_created := true;
+  end if;
+
+  if v_created then
+    insert into private.outbox (is_test, dedupe_key, event_type, order_id, activation_id, payload)
+    values (
+      p_test_mode, 'activation-created:' || v_activation.id, 'activation.created', v_order.id, v_activation.id,
+      jsonb_build_object('order_id', v_order.id, 'activation_id', v_activation.id, 'user_id', p_user_id)
+    ) on conflict (is_test, dedupe_key) do nothing;
+  end if;
+
+  return jsonb_build_object(
+    'activation_id', v_activation.id,
+    'license_id', v_activation.license_id,
+    'device_id', v_activation.device_id,
+    'device_name', v_activation.device_name,
+    'last_refreshed_at', v_activation.last_refreshed_at,
+    'purchased_at', v_order.purchased_at,
+    'eligible_release', v_order.eligible_release,
+    'updates_until', v_order.updates_until,
+    'is_test', v_order.is_test
+  );
+end;
+$$;
+
+create function public.relic_refresh_activation(
+  p_activation_id uuid,
+  p_user_id uuid,
+  p_device_id text,
+  p_test_mode boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_license_id uuid;
+  v_activation private.activations%rowtype;
+  v_order private.purchase_orders%rowtype;
+begin
+  p_test_mode := coalesce(p_test_mode, false);
+  if p_activation_id is null or p_user_id is null or p_device_id is null then
+    raise exception using errcode = '22023', message = 'activation identity is required';
+  end if;
+  select a.license_id into v_license_id
+  from private.activations a
+  join private.purchase_orders o on o.id = a.license_id
+  where a.id = p_activation_id and o.is_test = p_test_mode;
+  if not found then
+    raise exception using errcode = '42501', message = 'activation is not owned by this account/device';
+  end if;
+  select o.* into v_order from private.purchase_orders o where o.id = v_license_id and o.is_test = p_test_mode for update;
+  select a.* into v_activation from private.activations a where a.id = p_activation_id for update;
+  if not found or v_activation.license_id <> v_order.id or v_order.user_id <> p_user_id or v_activation.device_id <> p_device_id then
+    raise exception using errcode = '42501', message = 'activation is not owned by this account/device';
+  end if;
+  if v_activation.revoked_at is not null or v_order.status <> 'paid' then
+    raise exception using errcode = 'P0001', message = 'activation is no longer active';
+  end if;
+  update private.activations set last_refreshed_at = now()
+  where id = v_activation.id returning * into v_activation;
+  return jsonb_build_object(
+    'activation_id', v_activation.id,
+    'license_id', v_activation.license_id,
+    'device_id', v_activation.device_id,
+    'device_name', v_activation.device_name,
+    'last_refreshed_at', v_activation.last_refreshed_at,
+    'purchased_at', v_order.purchased_at,
+    'eligible_release', v_order.eligible_release,
+    'updates_until', v_order.updates_until,
+    'is_test', v_order.is_test
+  );
+end;
+$$;
+
+create function public.relic_revoke_activation(
+  p_activation_id uuid,
+  p_user_id uuid,
+  p_test_mode boolean default false
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_license_id uuid;
+  v_activation private.activations%rowtype;
+  v_order private.purchase_orders%rowtype;
+begin
+  p_test_mode := coalesce(p_test_mode, false);
+  if p_activation_id is null or p_user_id is null then
+    raise exception using errcode = '22023', message = 'activation identity is required';
+  end if;
+  select a.license_id into v_license_id
+  from private.activations a
+  join private.purchase_orders o on o.id = a.license_id
+  where a.id = p_activation_id and o.is_test = p_test_mode;
+  if not found then
+    raise exception using errcode = '42501', message = 'activation is not owned by this account';
+  end if;
+  select o.* into v_order from private.purchase_orders o where o.id = v_license_id and o.is_test = p_test_mode for update;
+  select a.* into v_activation from private.activations a where a.id = p_activation_id for update;
+  if not found or v_activation.license_id <> v_order.id or v_order.user_id <> p_user_id then
+    raise exception using errcode = '42501', message = 'activation is not owned by this account';
+  end if;
+  if v_activation.revoked_at is null then
+    update private.activations set revoked_at = now(), revoked_reason = 'account_deactivated'
+    where id = v_activation.id returning * into v_activation;
+    insert into private.outbox (is_test, dedupe_key, event_type, order_id, activation_id, payload)
+    values (
+      p_test_mode, 'activation-revoked:' || v_activation.id || ':' || v_activation.revoked_at,
+      'activation.revoked', v_order.id, v_activation.id,
+      jsonb_build_object('order_id', v_order.id, 'activation_id', v_activation.id, 'user_id', p_user_id)
+    ) on conflict (is_test, dedupe_key) do nothing;
+  end if;
+  return true;
+end;
+$$;
+
+create function public.relic_list_account_licenses(
+  p_user_id uuid,
+  p_test_mode boolean default false
+)
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'license_id', o.id,
+    'status', o.status,
+    'purchased_at', o.purchased_at,
+    'updates_until', o.updates_until,
+    'eligible_release', o.eligible_release,
+    'seat_limit', o.seat_limit,
+    'amount_cents', o.amount_cents,
+    'currency', o.currency,
+    'is_test', o.is_test
+  ) order by o.purchased_at desc), '[]'::jsonb)
+  from private.purchase_orders o
+  where o.user_id = p_user_id and o.is_test = coalesce(p_test_mode, false);
+$$;
+
+create function public.relic_list_account_activations(
+  p_user_id uuid,
+  p_test_mode boolean default false
+)
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'activation_id', a.id,
+    'license_id', a.license_id,
+    'device_id', a.device_id,
+    'device_name', a.device_name,
+    'activated_at', a.created_at,
+    'created_at', a.created_at,
+    'last_refreshed_at', a.last_refreshed_at,
+    'revoked_at', a.revoked_at,
+    'revoked_reason', a.revoked_reason,
+    'is_test', o.is_test
+  ) order by a.created_at desc), '[]'::jsonb)
+  from private.activations a
+  join private.purchase_orders o on o.id = a.license_id
+  where o.user_id = p_user_id and o.is_test = coalesce(p_test_mode, false);
+$$;
+
+create function public.relic_record_payment_event(
+  p_provider_event_id text,
+  p_stripe_checkout_session_id text,
+  p_stripe_payment_intent_id text,
+  p_event_type text,
+  p_event_status text,
+  p_occurred_at timestamptz,
+  p_payload_hash text,
+  p_test_mode boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_event private.webhook_events%rowtype;
+  v_order private.purchase_orders%rowtype;
+  v_matching_orders integer;
+  v_reason text;
+begin
+  p_test_mode := coalesce(p_test_mode, false);
+  p_stripe_checkout_session_id := nullif(p_stripe_checkout_session_id, '');
+  p_stripe_payment_intent_id := nullif(p_stripe_payment_intent_id, '');
+  if p_provider_event_id is null or length(p_provider_event_id) not between 1 and 255
+     or p_event_type is null or length(p_event_type) not between 1 and 120
+     or p_event_status is null or length(p_event_status) not between 1 and 80
+     or p_occurred_at is null or p_payload_hash is null or length(p_payload_hash) not between 1 and 255 then
+    raise exception using errcode = '22023', message = 'payment event fields are incomplete or out of range';
+  end if;
+  if (p_stripe_checkout_session_id is not null and length(p_stripe_checkout_session_id) not between 1 and 255)
+     or (p_stripe_payment_intent_id is not null and length(p_stripe_payment_intent_id) not between 1 and 255) then
+    raise exception using errcode = '22023', message = 'Stripe identifiers are out of range';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('event:' || p_provider_event_id, 0));
+  if p_stripe_payment_intent_id is not null then
+    perform pg_advisory_xact_lock(hashtextextended(p_stripe_payment_intent_id, 0));
+  end if;
+  if exists (
+    select 1 from private.webhook_events
+    where provider_event_id = p_provider_event_id and is_test <> p_test_mode
+  ) or exists (
+    select 1 from private.webhook_events
+    where is_test <> p_test_mode
+      and ((p_stripe_checkout_session_id is not null and stripe_checkout_session_id = p_stripe_checkout_session_id)
+        or (p_stripe_payment_intent_id is not null and stripe_payment_intent_id = p_stripe_payment_intent_id))
+  ) or exists (
+    select 1 from private.purchase_orders
+    where is_test <> p_test_mode
+      and ((p_stripe_checkout_session_id is not null and stripe_checkout_session_id = p_stripe_checkout_session_id)
+        or (p_stripe_payment_intent_id is not null and stripe_payment_intent_id = p_stripe_payment_intent_id))
+  ) or exists (
+    select 1 from private.payment_blocks
+    where is_test <> p_test_mode
+      and ((p_stripe_checkout_session_id is not null and stripe_checkout_session_id = p_stripe_checkout_session_id)
+        or (p_stripe_payment_intent_id is not null and stripe_payment_intent_id = p_stripe_payment_intent_id))
+  ) then
+    raise exception using errcode = 'P0001', message = 'Stripe event identifiers belong to another mode';
+  end if;
+
+  v_reason := case
+    when lower(p_event_type) in ('chargeback', 'charge.dispute.funds_withdrawn') or lower(p_event_status) = 'chargeback' then 'chargeback'
+    when lower(p_event_type) in ('charge.dispute.created', 'dispute', 'disputed') or lower(p_event_status) = 'disputed' then 'disputed'
+    when lower(p_event_type) in ('charge.refunded', 'refund.created', 'refund.updated', 'refund', 'refunded') and lower(p_event_status) in ('blocked', 'refunded', 'confirmed') then 'refunded'
+    when lower(p_event_status) = 'refunded' then 'refunded'
+    else null
+  end;
+  if v_reason is not null and p_stripe_payment_intent_id is null then
+    raise exception using errcode = '22023', message = 'blocked payment event requires a Stripe payment intent';
+  end if;
+
+  insert into private.webhook_events (
+    is_test, provider_event_id, stripe_checkout_session_id, stripe_payment_intent_id,
+    event_type, event_status, occurred_at, payload_hash
+  ) values (
+    p_test_mode, p_provider_event_id, p_stripe_checkout_session_id, p_stripe_payment_intent_id,
+    p_event_type, p_event_status, p_occurred_at, p_payload_hash
+  ) on conflict (is_test, provider_event_id) do nothing returning * into v_event;
+  if not found then
+    select * into v_event from private.webhook_events
+    where is_test = p_test_mode and provider_event_id = p_provider_event_id;
+    if v_event.stripe_checkout_session_id is distinct from p_stripe_checkout_session_id
+       or v_event.stripe_payment_intent_id is distinct from p_stripe_payment_intent_id
+       or v_event.event_type is distinct from p_event_type
+       or v_event.event_status is distinct from p_event_status
+       or v_event.occurred_at is distinct from p_occurred_at
+       or v_event.payload_hash is distinct from p_payload_hash then
+      raise exception using errcode = 'P0001', message = 'provider event identity or payload conflicts';
+    end if;
+    return jsonb_build_object('event_id', v_event.id, 'provider_event_id', v_event.provider_event_id, 'duplicate', true, 'is_test', v_event.is_test);
+  end if;
+
+  if v_reason is not null then
+    select count(*) into v_matching_orders
+    from private.purchase_orders
+    where is_test = p_test_mode
+      and ((p_stripe_checkout_session_id is not null and stripe_checkout_session_id = p_stripe_checkout_session_id)
+        or (p_stripe_payment_intent_id is not null and stripe_payment_intent_id = p_stripe_payment_intent_id));
+    if v_matching_orders > 1 then
+      raise exception using errcode = 'P0001', message = 'payment identifiers map to different purchases';
+    end if;
+    select * into v_order from private.purchase_orders
+    where is_test = p_test_mode
+      and ((p_stripe_checkout_session_id is not null and stripe_checkout_session_id = p_stripe_checkout_session_id)
+        or (p_stripe_payment_intent_id is not null and stripe_payment_intent_id = p_stripe_payment_intent_id))
+    for update;
+    insert into private.payment_blocks (
+      is_test, provider_event_id, stripe_checkout_session_id, stripe_payment_intent_id, order_id, reason
+    ) values (
+      p_test_mode, p_provider_event_id, p_stripe_checkout_session_id, p_stripe_payment_intent_id, v_order.id, v_reason
+    ) on conflict (is_test, provider_event_id) do nothing;
+    if v_order.id is not null then
+      update private.purchase_orders set status = v_reason, updated_at = now()
+      where id = v_order.id and is_test = p_test_mode;
+      update private.activations set revoked_at = coalesce(revoked_at, now()), revoked_reason = 'payment_' || v_reason
+      where license_id = v_order.id and revoked_at is null;
+      insert into private.outbox (is_test, dedupe_key, event_type, order_id, payload)
+      values (
+        p_test_mode, 'payment-blocked:' || v_order.id || ':' || p_provider_event_id, 'payment.blocked', v_order.id,
+        jsonb_build_object('order_id', v_order.id, 'reason', v_reason, 'provider_event_id', p_provider_event_id)
+      ) on conflict (is_test, dedupe_key) do nothing;
+    end if;
+  end if;
+
+  return jsonb_build_object(
+    'event_id', v_event.id,
+    'provider_event_id', v_event.provider_event_id,
+    'blocked_reason', v_reason,
+    'duplicate', false,
+    'is_test', v_event.is_test
+  );
+end;
+$$;
+
+revoke all on function public.relic_fulfill_purchase(text, text, text, uuid, text, timestamptz, timestamptz, text, integer, text, boolean) from public, anon, authenticated;
+revoke all on function public.relic_activate_license(uuid, uuid, text, text, boolean) from public, anon, authenticated;
+revoke all on function public.relic_refresh_activation(uuid, uuid, text, boolean) from public, anon, authenticated;
+revoke all on function public.relic_revoke_activation(uuid, uuid, boolean) from public, anon, authenticated;
+revoke all on function public.relic_list_account_licenses(uuid, boolean) from public, anon, authenticated;
+revoke all on function public.relic_list_account_activations(uuid, boolean) from public, anon, authenticated;
+revoke all on function public.relic_record_payment_event(text, text, text, text, text, timestamptz, text, boolean) from public, anon, authenticated;
+
+grant execute on function public.relic_fulfill_purchase(text, text, text, uuid, text, timestamptz, timestamptz, text, integer, text, boolean) to service_role;
+grant execute on function public.relic_activate_license(uuid, uuid, text, text, boolean) to service_role;
+grant execute on function public.relic_refresh_activation(uuid, uuid, text, boolean) to service_role;
+grant execute on function public.relic_revoke_activation(uuid, uuid, boolean) to service_role;
+grant execute on function public.relic_list_account_licenses(uuid, boolean) to service_role;
+grant execute on function public.relic_list_account_activations(uuid, boolean) to service_role;
+grant execute on function public.relic_record_payment_event(text, text, text, text, text, timestamptz, text, boolean) to service_role;

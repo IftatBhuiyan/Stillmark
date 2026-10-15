@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>WinShot</AssemblyName>
+    <RootNamespace>WinShot.App</RootNamespace>
+    <ApplicationIcon>Assets\winshot.ico</ApplicationIcon>
+    <!-- ScreenRecorderLib ships native (C++/CLI) binaries and refuses AnyCPU. -->
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Velopack must initialize before WPF processes install/update hook arguments. -->
+    <StartupObject>WinShot.App.Program</StartupObject>
+    <!-- WinForms analyzers dislike DPI settings in the manifest, but WPF (our host) requires them there. -->
+    <NoWarn>$(NoWarn);WFAC010;WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <!-- Local developers must not lose full Debug access when the customer trial expires. This
+       compile-time policy has no runtime switch and is rejected outside the exact Debug
+       configuration. Set WinShotLocalDeveloperUse=false in Debug to exercise real licensing. -->
+  <PropertyGroup>
+    <DefineConstants Condition="'$(WinShotLocalDeveloperUse)' == 'true'">$(DefineConstants);WINSHOT_LOCAL_DEVELOPER_USE</DefineConstants>
+  </PropertyGroup>
+
+  <Target Name="ValidateLocalDeveloperUseBoundary" BeforeTargets="CoreCompile">
+    <Error Condition="'$(WinShotLocalDeveloperUse)' != 'true' and '$(WinShotLocalDeveloperUse)' != 'false'"
+           Text="WinShotLocalDeveloperUse must be exactly true or false." />
+    <Error Condition="'$(Configuration)' != 'Debug' and '$(WinShotLocalDeveloperUse)' == 'true'"
+           Text="Local developer entitlement is permitted only in the exact Debug configuration." />
+    <Error Condition="'$(Configuration)' != 'Debug' and $([System.String]::Copy('$(DefineConstants)').Contains('WINSHOT_LOCAL_DEVELOPER_USE'))"
+           Text="The local developer entitlement symbol is forbidden outside the exact Debug configuration." />
+  </Target>
+
+  <ItemGroup>
+    <!-- WinForms is only used for NotifyIcon and dialogs; keep its namespace out of every file. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ScreenRecorderLib" Version="6.3.0" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinShot.Core\WinShot.Core.csproj" />
+    <ProjectReference Include="..\WinShot.Capture\WinShot.Capture.csproj" />
+    <ProjectReference Include="..\WinShot.Interop\WinShot.Interop.csproj" />
+    <ProjectReference Include="..\WinShot.Licensing\WinShot.Licensing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\winshot.ico" />
+    <Resource Include="Assets\winshot-master.png" />
+    <EmbeddedResource
+      Include="..\..\packaging\commercial-config.json"
+      LogicalName="WinShot.CommercialConfiguration.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WinShot.Core.Tests" />
+  </ItemGroup>
+
+</Project>

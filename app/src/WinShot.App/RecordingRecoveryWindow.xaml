@@ -1,0 +1,193 @@
+<Window x:Class="WinShot.App.RecordingRecoveryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Recording Recovery"
+        Width="720" Height="560"
+        MinWidth="520" MinHeight="380"
+        Background="{DynamicResource CanvasBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        WindowStartupLocation="CenterScreen"
+        AutomationProperties.Name="Recording Recovery">
+    <Window.Resources>
+        <Style x:Key="RecoveryItemContainer" TargetType="ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="RecoverySecondaryButton"
+               TargetType="Button"
+               BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+            <Setter Property="MinWidth" Value="82" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <StackPanel>
+                <TextBlock Text="Recording recovery"
+                           FontSize="24"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="Review recording files left behind after an interrupted session."
+                           Margin="0,6,0,0"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+            </StackPanel>
+            <Button x:Name="RefreshButton"
+                    Content="Refresh"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    MinWidth="88"
+                    FocusVisualStyle="{StaticResource KeyboardFocusVisual}"
+                    AutomationProperties.Name="Refresh recording recovery list"
+                    Click="OnRefresh" />
+        </Grid>
+
+        <Border Grid.Row="1"
+                Margin="0,20,0,16"
+                Padding="14,12"
+                Background="{DynamicResource QuietAccentSubtleBrush}"
+                BorderBrush="{DynamicResource BorderSoftBrush}"
+                BorderThickness="1"
+                CornerRadius="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE7BA;"
+                           FontFamily="{StaticResource IconFont}"
+                           FontSize="16"
+                           Foreground="{DynamicResource FocusBrush}"
+                           VerticalAlignment="Top"
+                           Margin="0,1,11,0" />
+                <TextBlock Grid.Column="1"
+                           Text="Stillmark does not preview or auto-play these files. A recovered item is copied into your captures folder under a new &quot;Recovered&quot; name; the original is kept if publication fails."
+                           TextWrapping="Wrap"
+                           FontSize="12"
+                           LineHeight="18"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="StatusText"
+                       MinHeight="20"
+                       Margin="2,0,0,10"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite" />
+
+            <Grid x:Name="RecoveryPanel" Grid.Row="1">
+                <TextBlock x:Name="EmptyText"
+                           Text="No interrupted recording files were found."
+                           FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Visibility="Collapsed" />
+
+                <ListBox x:Name="Cards"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Focusable="False"
+                         IsTabStop="False"
+                         ItemContainerStyle="{StaticResource RecoveryItemContainer}"
+                         KeyboardNavigation.TabNavigation="Continue"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource SurfaceBrush}"
+                                    BorderBrush="{DynamicResource BorderSoftBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="16"
+                                    Margin="0,0,8,12"
+                                    AutomationProperties.Name="{Binding AutomationName}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="42" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Width="36"
+                                            Height="36"
+                                            CornerRadius="9"
+                                            Background="{DynamicResource SurfaceRaisedBrush}"
+                                            VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding IconGlyph}"
+                                                   FontFamily="{StaticResource IconFont}"
+                                                   FontSize="16"
+                                                   Foreground="{DynamicResource FocusBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" Margin="10,0,18,0">
+                                        <TextBlock Text="{Binding FileName}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding MetadataText}"
+                                                   Margin="0,4,0,0"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextTertiaryBrush}" />
+                                        <TextBlock Text="{Binding IntegrityLabel}"
+                                                   Margin="0,8,0,0"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <Button Content="Recover"
+                                                MinWidth="86"
+                                                Margin="0,0,8,0"
+                                                Style="{StaticResource AccentButton}"
+                                                FocusVisualStyle="{StaticResource KeyboardFocusVisual}"
+                                                AutomationProperties.Name="{Binding RecoverAutomationName}"
+                                                Click="OnRecover" />
+                                        <Button Content="Remove"
+                                                Style="{StaticResource RecoverySecondaryButton}"
+                                                AutomationProperties.Name="{Binding RemoveAutomationName}"
+                                                Click="OnRemove" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
