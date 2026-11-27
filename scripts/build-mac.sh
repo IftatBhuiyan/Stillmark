@@ -9,14 +9,29 @@ for arch in arm64 x86_64; do
 done
 app="$output/Stillmark.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-iconset="$output/Stillmark.iconset"
-mkdir -p "$iconset"
-for points in 16 32 128 256 512; do
-  sips -z "$points" "$points" app/src/WinShot.App/Assets/winshot-master.png --out "$iconset/icon_${points}x${points}.png" >/dev/null
-  retina=$((points * 2))
-  sips -z "$retina" "$retina" app/src/WinShot.App/Assets/winshot-master.png --out "$iconset/icon_${points}x${points}@2x.png" >/dev/null
-done
-iconutil -c icns "$iconset" -o "$app/Contents/Resources/Stillmark.icns"
+# App icon: the Icon Composer bundle (light + dark paper tiles) is compiled by
+# actool on Xcode 26 or newer. Older toolchains cannot read .icon bundles, so
+# they fall back to a plain .icns made from the flat light icon.
+icon_build="$(mktemp -d)"
+icon_name=""
+if xcrun actool mac/Icon/Stillmark.icon --compile "$icon_build" --app-icon Stillmark \
+    --platform macosx --minimum-deployment-target 15.0 \
+    --output-partial-info-plist "$icon_build/icon.plist" >/dev/null 2>&1 \
+    && [[ -f "$icon_build/Assets.car" && -f "$icon_build/Stillmark.icns" ]]; then
+  cp "$icon_build/Assets.car" "$icon_build/Stillmark.icns" "$app/Contents/Resources/"
+  icon_name="Stillmark"
+else
+  rm -f "$app/Contents/Resources/Assets.car"
+  iconset="$icon_build/Stillmark.iconset"
+  mkdir -p "$iconset"
+  for points in 16 32 128 256 512; do
+    sips -z "$points" "$points" mac/Icon/Stillmark-flat.png --out "$iconset/icon_${points}x${points}.png" >/dev/null
+    retina=$((points * 2))
+    sips -z "$retina" "$retina" mac/Icon/Stillmark-flat.png --out "$iconset/icon_${points}x${points}@2x.png" >/dev/null
+  done
+  iconutil -c icns "$iconset" -o "$app/Contents/Resources/Stillmark.icns"
+fi
+rm -rf "$icon_build"
 arm_bin="$(swift build --package-path mac -c release --triple arm64-apple-macosx15.0 --scratch-path mac/.build/arm64 --show-bin-path)/Stillmark"
 intel_bin="$(swift build --package-path mac -c release --triple x86_64-apple-macosx15.0 --scratch-path mac/.build/x86_64 --show-bin-path)/Stillmark"
 lipo -create "$arm_bin" "$intel_bin" -output "$app/Contents/MacOS/Stillmark"
@@ -53,6 +68,9 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 <key>NSHumanReadableCopyright</key><string>Copyright © 2026 Iftat Bhuiyan. GPL-3.0-only.</string>
 </dict></plist>
 PLIST
+if [[ -n "$icon_name" ]]; then
+  plutil -insert CFBundleIconName -string "$icon_name" "$app/Contents/Info.plist"
+fi
 cp LICENSE "$app/Contents/Resources/LICENSE"
 signing_identity="${STILLMARK_SIGNING_IDENTITY:--}"
 if [[ "$signing_identity" == "-" ]]; then
